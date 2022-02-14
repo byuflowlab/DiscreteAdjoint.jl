@@ -3,6 +3,11 @@ uuid = "cba858d8-efe6-4c9f-a54b-573f1b893fd6"
 authors = ["Taylor McDonnell <taylor.golden.mcdonnell@gmail.com> and contributors"]
 version = "0.1.0"
 
+[deps]
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
+UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
+
 [compat]
 julia = "1"
 

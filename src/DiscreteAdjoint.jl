@@ -1,5 +1,9 @@
 module DiscreteAdjoint
 
-# Write your package code here.
+using SciMLBase, ForwardDiff, UnPack
+
+export discrete_adjoint
+
+include("adjoint.jl")
 
 end
