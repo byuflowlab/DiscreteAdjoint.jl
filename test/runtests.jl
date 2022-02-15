@@ -13,11 +13,11 @@ using Test
     sol = solve(prob, Tsit5(), u0=u0, p=p, abstol=1e-10, reltol=1e-10, tstops=0:0.1:10.0)
     
     # jump function
-    g(u,p,t,i) = sum(u)
+    dg(out,u,p,t,i) = out .= 1
     t = 0:0.1:10.0
     
     # discrete adjoint solution
-    dp, du0 = discrete_adjoint(sol, g, t; abstol=1e-10, reltol=1e-10)
+    dp, du0 = discrete_adjoint(sol, dg, t; abstol=1e-10, reltol=1e-10)
     # dp = [8.30536  -159.484  75.2035  -339.195]
     # du0 = [-39.1275  -8.78778]
 
