@@ -31,10 +31,10 @@ end
     @.. thread=thread tmp = uprev+dt*(a71*k1+a72*k2+a73*k3+a74*k4+a75*k5+a76*k6)
     stage_limiter!(tmp, f, p, t+dt)
     step_limiter!(tmp, f, p, t+dt)
-    @.. thread=thread resid = u - tmp
+    @.. thread=thread resid = u-tmp
 end
   
-@muladd function step_residual(resid, t, dt, uprev, u, f, p, cache::Tsit5Cache{uType,rateType,uNoUnitsType,TabType,StageLimiter,StepLimiter,Thread}, repeat_step=false) where {uType<:Array,rateType,uNoUnitsType,TabType,StageLimiter,StepLimiter,Thread<:False}
+@muladd function step_residual!(resid, t, dt, uprev, u, f, p, cache::Tsit5Cache{uType,rateType,uNoUnitsType,TabType,StageLimiter,StepLimiter,Thread}) where {uType<:Union{Array,Zygote.Buffer},rateType,uNoUnitsType,TabType,StageLimiter,StepLimiter,Thread<:False}
     uidx = eachindex(uprev)
     @unpack c1,c2,c3,c4,c5,c6,a21,a31,a32,a41,a42,a43,a51,a52,a53,a54,a61,a62,a63,a64,a65,a71,a72,a73,a74,a75,a76,btilde1,btilde2,btilde3,btilde4,btilde5,btilde6,btilde7 = cache.tab
     @unpack k1,k2,k3,k4,k5,k6,k7,tmp,stage_limiter!,step_limiter! = cache

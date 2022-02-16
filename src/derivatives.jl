@@ -3,8 +3,6 @@ struct ForwardDiffVJP{N} <: VJPChoice
     ForwardDiffVJP(chunk_size=nothing) = new{chunk_size}()
 end
 struct ZygoteVJP <: VJPChoice end
-struct EnzymeVJP <: VJPChoice end
-struct TrackerVJP <: VJPChoice end
 struct ReverseDiffVJP{C} <: VJPChoice
     ReverseDiffVJP(compile=false) = new{compile}()
 end
@@ -114,12 +112,10 @@ function parameter_jacobian_product(integrator, ::ForwardDiffVJP{N}) where N
     t0, tf = tspan
 
     chunk_size = isnothing(N) ? ForwardDiff.pickchunksize(length(p)) : N
-    fcache = reallocate_cache(integrator.cache, (x) -> PreallocationTools.dualcache(x, chunk_size))
-    rcache = PreallocationTools.dualcache(u0, chunk_size) 
 
     fvjp = (λ, t, dt, uprev, u, p) -> begin 
-        resid = PreallocationTools.get_tmp(rcache, p)
-        cache = reallocate_cache(fcache, (x) -> PreallocationTools.get_tmp(x, p))
+        resid = similar(λ, eltype(p))
+        cache = reallocate_cache(integrator.cache, (x) -> similar(x, eltype(p)))
         step_residual!(resid, t, dt, uprev, u, f, p, cache)
         return λ'*resid
     end
@@ -163,13 +159,13 @@ function vector_jacobian_product_function(integrator, ::ReverseDiffVJP{C}) where
     cache = integrator.cache
 
     fvjp = (λ, t, dt, uprev, u, p) -> begin 
-        resid = similar(λ)
-        fcache = reallocate_cache(cache, x -> similar(x, eltype(λ)))
+        resid = zeros(eltype(λ), length(λ))
+        fcache = reallocate_cache(cache, x -> zeros(eltype(λ), length(x)))
         step_residual!(resid, first(t), first(dt), uprev, u, f, p, fcache)
         return λ'*resid
     end
     
-    gλ = similar(u0) 
+    gλ = similar(u0)
     gt = similar([t0])
     gdt = similar([t0])
     guprev = similar(u0)
@@ -197,12 +193,13 @@ function vector_jacobian_product_function(integrator, ::ZygoteVJP)
     @unpack f, p, u0, tspan = prob
     t0, tf = tspan
 
-    resid = similar(u0)
     cache = integrator.cache
 
     fvjp = (λ, t, dt, uprev, u, p) -> begin 
-        step_residual!(resid, t, dt, uprev, u, f, p, cache)
-        return λ'*resid
+        resid = Zygote.Buffer(λ)
+        fcache = reallocate_cache(cache, Zygote.Buffer)
+        step_residual!(resid, t, dt, uprev, u, f, p, fcache)
+        return λ'*copy(resid)
     end
 
     vjp = (uvjpval, pvjpval, λ, t, dt, uprev, u, p) -> begin
