@@ -11,4 +11,5 @@ PreallocationTools = "d236fae5-4411-538c-8e31-a6e3d9e00b46"
 UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 
 [compat]
+OrdinaryDiffEq = "6"
 julia = "1"
