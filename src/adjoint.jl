@@ -1,4 +1,4 @@
-function discrete_adjoint(sol, dg, t; kwargs...)
+function discrete_adjoint(sol, dg, t; autojacvec=ForwardDiffVJP(), kwargs...)
 
     @assert sol.dense "Currently `discrete_adjoint` only works with dense solutions"
     @assert all(tidx -> tidx in sol.t, t) "A `tstop` must be set for every data point"
@@ -9,14 +9,11 @@ function discrete_adjoint(sol, dg, t; kwargs...)
    
     integrator = OrdinaryDiffEq.init(prob, alg; kwargs...)
 
-    # current state jacobian function
+    # state jacobian function
     jac = state_jacobian(integrator)
 
-    # previous state vector-jacobian product function
-    uvjp = previous_state_jacobian_product(integrator)
-
-    # parameter vector-jacobian product function
-    pvjp = parameter_jacobian_product(integrator)
+    # vector-jacobian products
+    vjp = vector_jacobian_product_function(integrator, autojacvec)
 
     # Discrete Adjoint Solution
     dp = zeros(length(p))
@@ -48,11 +45,11 @@ function discrete_adjoint(sol, dg, t; kwargs...)
         else
             λ .= rhs
         end
+        # vector jacobian products
+        vjp(uvjpval, pvjpval, λ, ti, dt, uprev, ui, p)
         # accumulate gradient
-        pvjp(pvjpval, λ, ti, dt, uprev, ui, p)
         dp .-= pvjpval
         # initialize right hand side for the next iteration
-        uvjp(uvjpval, λ, ti, dt, uprev, ui, p)
         rhs .= uvjpval
     end
     # define gradient with respect to the inputs

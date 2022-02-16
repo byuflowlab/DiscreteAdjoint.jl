@@ -14,7 +14,11 @@ using Test
     dg(out,u,p,t,i) = out .= 1
     t = 0:0.1:10.0
     
-    dp, du0 = discrete_adjoint(sol, dg, t; abstol=1e-10, reltol=1e-10)
+    dp_fd, du0_fd = discrete_adjoint(sol, dg, t; autojacvec=ForwardDiffVJP())
+    # dp = [8.30536  -159.484  75.2035  -339.195]
+    # du0 = [-39.1275  -8.78778]
+
+    dp_rd, du0_rd = discrete_adjoint(sol, dg, t; autojacvec=ReverseDiffVJP())
     # dp = [8.30536  -159.484  75.2035  -339.195]
     # du0 = [-39.1275  -8.78778]
 
@@ -27,7 +31,10 @@ using Test
     dx = ForwardDiff.gradient(sum_of_solution,[u0;p])
     # dx = [-39.1275  -8.78778  8.30536  -159.484  75.2035  -339.195]
 
-    @test isapprox(du0, dx[1:2])
-    @test isapprox(dp, dx[3:end])
+    @test isapprox(du0_fd, dx[1:2])
+    @test isapprox(dp_fd, dx[3:end])
+
+    @test isapprox(du0_rd, dx[1:2])
+    @test isapprox(dp_rd, dx[3:end])
 
 end

@@ -12,13 +12,6 @@ end
 @muladd function step_residual!(resid, t, dt, uprev, u, f, p, cache::Tsit5Cache)
     @unpack c1,c2,c3,c4,c5,c6,a21,a31,a32,a41,a42,a43,a51,a52,a53,a54,a61,a62,a63,a64,a65,a71,a72,a73,a74,a75,a76,btilde1,btilde2,btilde3,btilde4,btilde5,btilde6,btilde7 = cache.tab
     @unpack k1,k2,k3,k4,k5,k6,tmp,stage_limiter!,step_limiter!,thread = cache
-    k1 = get_tmp(k1, resid)
-    k2 = get_tmp(k2, resid)
-    k3 = get_tmp(k3, resid)
-    k4 = get_tmp(k4, resid)
-    k5 = get_tmp(k5, resid)
-    k6 = get_tmp(k6, resid)
-    tmp = get_tmp(tmp, resid)
     f(k1, uprev, p, t)
     @.. thread=thread tmp = uprev+dt*a21*k1
     stage_limiter!(tmp, f, p, t+c1*dt)
@@ -42,15 +35,9 @@ end
 end
   
 @muladd function step_residual(resid, t, dt, uprev, u, f, p, cache::Tsit5Cache{uType,rateType,uNoUnitsType,TabType,StageLimiter,StepLimiter,Thread}, repeat_step=false) where {uType<:Array,rateType,uNoUnitsType,TabType,StageLimiter,StepLimiter,Thread<:False}
-    @unpack c1,c2,c3,c4,c5,c6,a21,a31,a32,a41,a42,a43,a51,a52,a53,a54,a61,a62,a63,a64,a65,a71,a72,a73,a74,a75,a76,btilde1,btilde2,btilde3,btilde4,btilde5,btilde6,btilde7 = cache.tab
-    k1 = get_tmp(k1, resid)
-    k2 = get_tmp(k2, resid)
-    k3 = get_tmp(k3, resid)
-    k4 = get_tmp(k4, resid)
-    k5 = get_tmp(k5, resid)
-    k6 = get_tmp(k6, resid)
-    tmp = get_tmp(tmp, resid)
     uidx = eachindex(uprev)
+    @unpack c1,c2,c3,c4,c5,c6,a21,a31,a32,a41,a42,a43,a51,a52,a53,a54,a61,a62,a63,a64,a65,a71,a72,a73,a74,a75,a76,btilde1,btilde2,btilde3,btilde4,btilde5,btilde6,btilde7 = cache.tab
+    @unpack k1,k2,k3,k4,k5,k6,k7,tmp,stage_limiter!,step_limiter! = cache
     f(k1, uprev, p, t)
     @inbounds @simd ivdep for i in uidx
         tmp[i] = uprev[i]+dt*a21*k1[i]
