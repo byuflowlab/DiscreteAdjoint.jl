@@ -1,14 +1,13 @@
-using DiscreteAdjoint, OrdinaryDiffEq, ForwardDiff
+using DiscreteAdjoint, OrdinaryDiffEq, ForwardDiff, ReverseDiff
 using Test
 
 @testset "DiscreteAdjoint.jl" begin
     
     function f(du, u, p, t)
-        du .= 0
         du[1] = dx = p[1]*u[1] - p[2]*u[1]*u[2]
         du[2] = dy = -p[3]*u[2] + p[4]*u[1]*u[2]
     end
-    p = vcat([1.5,1.0,3.0,1.0], zeros(100)); tspan = (0.0, 10.0); u0 = vcat([1.0,1.0], ones(100)); 
+    p = [1.5,1.0,3.0,1.0]; tspan = (0.0, 10.0); u0 = [1.0,1.0]; 
     prob = ODEProblem(f, u0, tspan, p)
     sol = solve(prob, Tsit5(), u0=u0, p=p, abstol=1e-10, reltol=1e-10, tstops=0:0.1:10.0)
     
@@ -33,7 +32,7 @@ using Test
 
     # forward AD solution
     function sum_of_solution(x)
-        _prob = remake(prob, u0=x[1:length(u0)], p=x[length(u0)+1:end])
+        _prob = remake(prob, u0=x[1:2], p=x[3:end])
         sum(solve(_prob, Tsit5(), abstol=1e-10, reltol=1e-10, saveat=0.1))
     end
 
