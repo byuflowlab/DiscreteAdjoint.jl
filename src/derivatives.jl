@@ -29,10 +29,21 @@ function state_jacobian(integrator)
     @unpack f, p, u0, tspan = prob
     t0, tf = tspan
 
-    N = ForwardDiff.pickchunksize(length(u0))
-    fucache = reallocate_cache(integrator.cache, (x) -> PreallocationTools.dualcache(x, N))
+    chunk_size = ForwardDiff.pickchunksize(length(u0))
     
-    fr = (resid, t, dt, uprev, u, p) -> step_residual!(resid, t, dt, uprev, u, f, p, fucache)
+    cache = integrator.cache
+    tmpvar = temporary_variables(integrator.cache)
+    dualtmpvar = (; zip(keys(tmpvar), PreallocationTools.dualcache.(values(tmpvar), Ref(chunk_size)))...)
+    dualtmpkeys = keys(dualtmpvar)
+    dualtmpvals = values(dualtmpvar)
+
+    fr = let dualtmpkeys=dualtmpkeys, dualtmpvals=dualtmpvals, integrator=integrator, cache=cache
+        (resid, t, dt, uprev, u, p) -> begin 
+            tmpvar = (; zip(dualtmpkeys, PreallocationTools.get_tmp.(dualtmpvals, Ref(u)))...)
+            step_residual!(resid, t, dt, uprev, u, f, p, tmpvar, integrator, cache)
+            return resid
+        end
+    end
 
     fru = CurrentStateJacobianWrapper(fr, t0, t0, u0, p)
     
@@ -76,8 +87,10 @@ function previous_state_jacobian_product(integrator, ::ForwardDiffVJP{N}) where 
 
     dualresid = PreallocationTools.dualcache(u0, chunk_size)
     dualtmpvar = (; zip(keys(tmpvar), PreallocationTools.dualcache.(values(tmpvar), Ref(chunk_size)))...)
+    dualtmpkeys = keys(dualtmpvar)
+    dualtmpvals = values(dualtmpvar)
 
-    fvjp = let dualresid = dualresid, dualtmpvar=dualtmpvar, integrator=integrator, cache=cache
+    fvjp = let dualresid=dualresid, dualtmpkeys=dualtmpkeys, dualtmpvals=dualtmpvals, integrator=integrator, cache=cache
         (λ, t, dt, uprev, u, p) -> begin 
             resid = PreallocationTools.get_tmp(dualresid, uprev)
             tmpvar = (; zip(keys(dualtmpvar), PreallocationTools.get_tmp.(values(dualtmpvar), Ref(uprev)))...)
@@ -128,11 +141,13 @@ function parameter_jacobian_product(integrator, ::ForwardDiffVJP{N}) where N
 
     dualresid = PreallocationTools.dualcache(u0, chunk_size)
     dualtmpvar = (; zip(keys(tmpvar), PreallocationTools.dualcache.(values(tmpvar), Ref(chunk_size)))...)
+    dualtmpkeys = keys(dualtmpvar)
+    dualtmpvals = values(dualtmpvar)
 
-    fvjp = let dualresid = dualresid, dualtmpvar=dualtmpvar, integrator=integrator, cache=cache
+    fvjp = let dualresid=dualresid, dualtmpkeys=dualtmpkeys, dualtmpvals=dualtmpvals, integrator=integrator, cache=cache
         (λ, t, dt, uprev, u, p) -> begin 
             resid = PreallocationTools.get_tmp(dualresid, p)
-            tmpvar = (; zip(keys(dualtmpvar), PreallocationTools.get_tmp.(values(dualtmpvar), Ref(p)))...)
+            tmpvar = (; zip(dualtmpkeys, PreallocationTools.get_tmp.(dualtmpvals, Ref(p)))...)
             step_residual!(resid, t, dt, uprev, u, f, p, tmpvar, integrator, cache)
             return λ'*resid
         end

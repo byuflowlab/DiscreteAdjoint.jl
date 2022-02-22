@@ -1,4 +1,4 @@
-using DiscreteAdjoint, OrdinaryDiffEq, ForwardDiff, ReverseDiff
+using DiscreteAdjoint, OrdinaryDiffEq, ForwardDiff
 using Test
 
 @testset "DiscreteAdjoint.jl" begin
