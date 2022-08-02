@@ -5,7 +5,7 @@ using UnPack, MuladdMacro, PreallocationTools
 import ForwardDiff, ReverseDiff, Zygote
 
 using OrdinaryDiffEq: @.., True, False
-using OrdinaryDiffEq: Tsit5Cache, Tsit5ConstantCache
+using OrdinaryDiffEq: Tsit5Cache, Tsit5ConstantCache, BS3ConstantCache, BS3Cache, OwrenZen3ConstantCache, OwrenZen3Cache
 
 include("derivatives.jl")
 include("adjoint.jl")
