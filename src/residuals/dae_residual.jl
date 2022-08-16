@@ -1,4 +1,5 @@
-@muladd function perform_step!(resid, t, dt, uprev, u, f, p, tmpvar, integrator, cache::DImplicitEulerConstantCache)
+@muladd function step_residual!(resid, t, dt, uprev, u, f, p, tmpvar, integrator, cache::DImplicitEulerConstantCache)
+#=
   @unpack nlsolver = tmpvar
 
   nlsolver.z = zero(u)
@@ -6,10 +7,12 @@
   nlsolver.γ = 1
   z = nlsolve!(nlsolver, integrator, cache, false)#TODO: Figure out whether it is okay to have integrator and cache here.
   nlsolvefail(nlsolver) && return
-  resid = u-(uprev + z)
+  =#
+  f(resid,(u - uprev)/dt,uprev,p,t)
 end
 
-@muladd function perform_step!(resid, t, dt, uprev, u, f, p, tmpvar, integrator, cache::DImplicitEulerCache)
+@muladd function step_residual!(resid, t, dt, uprev, u, f, p, tmpvar, integrator, cache::DImplicitEulerCache)
+#=
   @unpack nlsolver = tmpvar
   @unpack tmp = nlsolver
 
@@ -18,5 +21,6 @@ end
   nlsolver.γ = 1
   z = nlsolve!(nlsolver, integrator, cache, false)
   nlsolvefail(nlsolver) && return
-  @.. broadcast=false resid = u-(uprev + z)
+  =#
+  f(resid,(u - uprev)/dt,uprev,p,t)
 end

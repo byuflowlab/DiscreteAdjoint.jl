@@ -103,17 +103,17 @@ using Test
     #@test isapprox(du0_z, dx[1:2])
     #@test isapprox(dp_z, dx[3:end])
 
-    function DAEroberts!(res,udot,u,params,time)
-        res[1] = - p[1]*u[1]              + p[2]*u[2]*u[3] - udot[1]
-        res[2] = + p[1]*u[1] - p[3]*u[2]^2 - p[2]*u[2]*u[3] - udot[2]
-        res[3] = u[1] + u[2] + u[3] - p[4]
+    function DAEroberts!(out,du,u,p,t)
+        out[1] = - p[1]*u[1]              + p[2]*u[2]*u[3] - du[1]
+        out[2] = + p[1]*u[1] - p[3]*u[2]^2 - p[2]*u[2]*u[3] - du[2]
+        out[3] = u[1] + u[2] + u[3] - p[4]
     end
 
     p = [0.04,1e4,3e7,1.0];
     u0 = [1.,0.,0.]
     du0 = [-0.04,0.04,0.0];
     tspan = (0.0, 1E5)
-    probdae = DAEProblem(f, du0,u0, tspan, p, differential_vars = [true,true,false])#TODO: perhaps p is not accepted here.
+    probdae = DAEProblem(DAEroberts!, du0,u0, tspan, p, differential_vars = [true,true,false])#TODO: perhaps p is not accepted here.
     dg(out,u,p,t,i) = out .= 1
     t = 10 .^(collect(range(-6.0,stop=5.0,length=10)))
 
@@ -124,20 +124,20 @@ using Test
     dp_rdc, du0_rdc = discrete_adjoint(sol, dg, t; autojacvec=ReverseDiffVJP(true))
     #dp_z, du0_z = discrete_adjoint(sol, dg, t; autojacvec=ZygoteVJP()) #TODO: Owrenzen3 doesn't seem to work with zygote.
     function sum_of_solution(x)
-        _prob = remake(probdae, u0=x[1:2], p=x[3:end])
+        _prob = remake(probdae, u0=x[1:3], p=x[4:end])
         sum(solve(_prob, DImplicitEuler(), abstol=1e-10, reltol=1e-10,  tstops=t))
     end
 
     dx = ForwardDiff.gradient(sum_of_solution,[u0;p])
 
-    @test isapprox(du0_fd, dx[1:2])
-    @test isapprox(dp_fd, dx[3:end])
+    @test isapprox(du0_fd, dx[1:3])
+    @test isapprox(dp_fd, dx[4:end])
 
-    @test isapprox(du0_rd, dx[1:2])
-    @test isapprox(dp_rd, dx[3:end])
+    @test isapprox(du0_rd, dx[1:3])
+    @test isapprox(dp_rd, dx[4:end])
 
-    @test isapprox(du0_rdc, dx[1:2])
-    @test isapprox(dp_rdc, dx[3:end])
+    @test isapprox(du0_rdc, dx[1:3])
+    @test isapprox(dp_rdc, dx[4:end])
 
     #@test isapprox(du0_z, dx[1:2])
     #@test isapprox(dp_z, dx[3:end])

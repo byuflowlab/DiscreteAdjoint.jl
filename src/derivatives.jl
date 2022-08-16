@@ -1,5 +1,5 @@
 abstract type VJPChoice end
-struct ForwardDiffVJP{N} <: VJPChoice 
+struct ForwardDiffVJP{N} <: VJPChoice
     ForwardDiffVJP(chunk_size=nothing) = new{chunk_size}()
 end
 struct ZygoteVJP <: VJPChoice end
@@ -30,15 +30,16 @@ function state_jacobian(integrator)
     t0, tf = tspan
 
     chunk_size = ForwardDiff.pickchunksize(length(u0))
-    
+
     cache = integrator.cache
     tmpvar = temporary_variables(integrator.cache)
+ 
     dualtmpvar = (; zip(keys(tmpvar), PreallocationTools.dualcache.(values(tmpvar), Ref(chunk_size)))...)
     dualtmpkeys = keys(dualtmpvar)
     dualtmpvals = values(dualtmpvar)
 
     fr = let dualtmpkeys=dualtmpkeys, dualtmpvals=dualtmpvals, integrator=integrator, cache=cache
-        (resid, t, dt, uprev, u, p) -> begin 
+        (resid, t, dt, uprev, u, p) -> begin
             tmpvar = (; zip(dualtmpkeys, PreallocationTools.get_tmp.(dualtmpvals, Ref(u)))...)
             step_residual!(resid, t, dt, uprev, u, f, p, tmpvar, integrator, cache)
             return resid
@@ -46,9 +47,9 @@ function state_jacobian(integrator)
     end
 
     fru = CurrentStateJacobianWrapper(fr, t0, t0, u0, p)
-    
+
     cfg = ForwardDiff.JacobianConfig(fru, u0, u0)
-    
+
     jac = (J, resid, t, dt, uprev, u, p) -> begin
         fru.t = t
         fru.dt = dt
@@ -91,7 +92,7 @@ function previous_state_jacobian_product(integrator, ::ForwardDiffVJP{N}) where 
     dualtmpvals = values(dualtmpvar)
 
     fvjp = let dualresid=dualresid, dualtmpkeys=dualtmpkeys, dualtmpvals=dualtmpvals, integrator=integrator, cache=cache
-        (λ, t, dt, uprev, u, p) -> begin 
+        (λ, t, dt, uprev, u, p) -> begin
             resid = PreallocationTools.get_tmp(dualresid, uprev)
             tmpvar = (; zip(keys(dualtmpvar), PreallocationTools.get_tmp.(values(dualtmpvar), Ref(uprev)))...)
             step_residual!(resid, t, dt, uprev, u, f, p, tmpvar, integrator, cache)
@@ -100,9 +101,9 @@ function previous_state_jacobian_product(integrator, ::ForwardDiffVJP{N}) where 
     end
 
     fruprev = PreviousStateJacobianProductWrapper(u0, fvjp, t0, t0, u0, p)
-    
+
     cfg = ForwardDiff.GradientConfig(fruprev, u0, ForwardDiff.Chunk(chunk_size))
-    
+
     uvjp = let fruprev = fruprev, cfg=cfg
         (uvjpval, λ, t, dt, uprev, u, p) -> begin
             fruprev.λ = λ
@@ -145,7 +146,7 @@ function parameter_jacobian_product(integrator, ::ForwardDiffVJP{N}) where N
     dualtmpvals = values(dualtmpvar)
 
     fvjp = let dualresid=dualresid, dualtmpkeys=dualtmpkeys, dualtmpvals=dualtmpvals, integrator=integrator, cache=cache
-        (λ, t, dt, uprev, u, p) -> begin 
+        (λ, t, dt, uprev, u, p) -> begin
             resid = PreallocationTools.get_tmp(dualresid, p)
             tmpvar = (; zip(dualtmpkeys, PreallocationTools.get_tmp.(dualtmpvals, Ref(p)))...)
             step_residual!(resid, t, dt, uprev, u, f, p, tmpvar, integrator, cache)
@@ -154,9 +155,9 @@ function parameter_jacobian_product(integrator, ::ForwardDiffVJP{N}) where N
     end
 
     frp = ParamJacobianProductWrapper(u0, fvjp, t0, t0, u0, u0)
-    
+
     cfg = ForwardDiff.GradientConfig(frp, p, ForwardDiff.Chunk(chunk_size))
-    
+
     pvjp = let frp = frp, cfg=cfg
         (pvjpval, λ, t, dt, uprev, u, p) -> begin
             frp.λ = λ
@@ -168,7 +169,7 @@ function parameter_jacobian_product(integrator, ::ForwardDiffVJP{N}) where N
         end
     end
 
-    return pvjp   
+    return pvjp
 end
 
 function vector_jacobian_product_function(integrator, autodiff::ForwardDiffVJP)
@@ -201,7 +202,7 @@ function vector_jacobian_product_function(integrator, ::ReverseDiffVJP{compile})
     tmpkeys = keys(tmpvar)
     tmpvals = values(tmpvar)
 
-    fvjp = let tmpkeys=tmpkeys, tmpvals=tmpvals, integrator=integrator, cache=cache 
+    fvjp = let tmpkeys=tmpkeys, tmpvals=tmpvals, integrator=integrator, cache=cache
         (λ, t, dt, uprev, u, p) -> begin
             resid = similar(λ)
             tmpvar = (; zip(tmpkeys, similar.(tmpvals, eltype(λ)))...)
@@ -209,7 +210,7 @@ function vector_jacobian_product_function(integrator, ::ReverseDiffVJP{compile})
             λ'*resid
         end
     end
-    
+
     gλ = similar(u0)
     gt = similar([t0])
     gdt = similar([t0])
@@ -219,7 +220,7 @@ function vector_jacobian_product_function(integrator, ::ReverseDiffVJP{compile})
 
     tape = ReverseDiff.GradientTape(fvjp, (gλ, gt, gdt, guprev, gu, gp))
 
-    if compile 
+    if compile
         tape = ReverseDiff.compile(tape)
     end
 
