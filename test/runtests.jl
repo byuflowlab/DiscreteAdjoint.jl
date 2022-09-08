@@ -112,19 +112,19 @@ using Test
     p = [0.04,1e4,3e7,1.0];
     u0 = [1.,0.,0.]
     du0 = [-0.04,0.04,0.0];
-    tspan = (0.0, 1E5)
+    tspan = (1,1E5)#(10.0^-6, 1E5)
     probdae = DAEProblem(DAEroberts!, du0,u0, tspan, p, differential_vars = [true,true,false])#TODO: perhaps p is not accepted here.
-    dg(out,du,u,p,t,i) = out .= 1
-    t = 10 .^(collect(range(-6.0,stop=5.0,length=10)))
+    dg(out,u,p,t,i) = out .= 1
+    t = collect(range(1,stop=1E5,length=1000))#10 .^(collect(range(-6.0,stop=5.0,length=1000)))
 
     #DImplicitEuler tests ----------------------------------------------
-    sol = solve(probdae, DImplicitEuler(), u0=u0, p=p, abstol=1e-10, reltol=1e-10, tstops=t)
+    sol = solve(probdae, DImplicitEuler(), u0=u0, p=p, abstol=1e-10, reltol=1e-10, saveat=t)
     dp_fd, du0_fd = discrete_adjoint(sol, dg, t; autojacvec=ForwardDiffVJP())
     dp_rd, du0_rd = discrete_adjoint(sol, dg, t; autojacvec=ReverseDiffVJP())
     dp_rdc, du0_rdc = discrete_adjoint(sol, dg, t; autojacvec=ReverseDiffVJP(true))
     function sum_of_solution(x)
         _prob = remake(probdae, u0=x[1:3], p=x[4:end])
-        sum(solve(_prob, DImplicitEuler(), abstol=1e-10, reltol=1e-10,  tstops=t))
+        sum(solve(_prob, DImplicitEuler(), abstol=1e-10, reltol=1e-10,  saveat=t))
     end
 
     dx = ForwardDiff.gradient(sum_of_solution,[u0;p])
