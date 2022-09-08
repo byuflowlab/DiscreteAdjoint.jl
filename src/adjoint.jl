@@ -39,7 +39,7 @@ function discrete_adjoint(sol, dg, t; autojacvec=ForwardDiffVJP(), kwargs...)
         end
         rhs .*= -1
         # compute adjoint vector
-        if true #OrdinaryDiffEq.isimplicit(alg)
+        if OrdinaryDiffEq.isimplicit(alg)
             jac(J, resid, ti, dt, uprev, ui, p)
             λ .= J' \ rhs
         else
