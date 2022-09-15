@@ -1,53 +1,63 @@
-function discrete_adjoint(sol, g, t; abstol=1e-10, reltol=1e-10)
+function discrete_adjoint(sol, dg, t; autojacvec=ForwardDiffVJP(), kwargs...)
 
-    @assert sol.dense "The solution must be dense"
-    @assert all(tidx -> tidx in sol.t, t) "State variables must be defined at every data point"
+    #@assert sol.dense "Currently `discrete_adjoint` only works with dense solutions"
+    @assert all(tidx -> tidx in sol.t, t) "A `tstop` must be set for every data point"
 
-    @unpack f, p, u0, tspan = sol.prob
+    @unpack prob, alg = sol
+    @unpack f, p, u0, tspan = prob
+    t0, tf = tspan
 
-    # residual (for each time step)
-    r(u, p, t, uprev, tprev) = begin
-        _prob = remake(sol.prob, u0=uprev, tspan=(tprev, t), p=p)
-        stepsol = solve(_prob, sol.alg, abstol=abstol, reltol=reltol)
-        return u - stepsol.u[end]
-    end
+    integrator = OrdinaryDiffEq.init(prob, alg; kwargs...)
 
-    # Jacobians (for each time step)
-    r_u(u, p, t, uprev, tprev) = ForwardDiff.jacobian((u)->r(u, p, t, uprev, tprev), u)
-    r_uprev(u, p, t, uprev, tprev) = ForwardDiff.jacobian((uprev)->r(u, p, t, uprev, tprev), uprev)
-    r_p(u, p, t, uprev, tprev) = ForwardDiff.jacobian((p)->r(u, p, t, uprev, tprev), p)
-    g_u(u, p, t, i) = ForwardDiff.gradient((u)->g(u, p, t, i), u)
-    g_p(u, p, t, i) = ForwardDiff.gradient((p)->g(u, p, t, i), p)
+    # state jacobian function
+    jac = state_jacobian(integrator)
+
+    # vector-jacobian products
+    vjp = vector_jacobian_product_function(integrator, autojacvec)
 
     # Discrete Adjoint Solution
     dp = zeros(length(p))
-    tmp = zeros(length(u0))
+    du0 = zeros(length(u0))
+    λ = zeros(length(u0))
+    rhs = zeros(length(u0))
+    resid = zeros(length(u0))
+    J = zeros(length(u0), length(u0))
+    dgval = zeros(length(u0))
+    uvjpval = zeros(length(u0))
+    pvjpval = zeros(length(p))
     for i = length(sol):-1:2
-        ui, uprev = sol.u[i], sol.u[i-1]
-        ti, tprev = sol.t[i], sol.t[i-1]
+        # arguments for this step
+        ti = sol.t[i]
+        dt = ti - sol.t[i-1]
+        uprev = sol.u[i-1]
+        ui = sol.u[i]
+        # compute right hand side
         idx = findfirst(tidx -> tidx == ti, t)
-        if isnothing(idx)
-            λ = r_u(ui,p,ti,uprev,tprev)' \ (-tmp)
-            dp .-= r_p(ui,p,ti,uprev,tprev)'*λ
-            tmp .= r_uprev(ui,p,ti,uprev,tprev)'*λ
-        else
-            λ = r_u(ui,p,ti,uprev,tprev)' \ (g_u(ui, p, ti, idx) - tmp)
-            dp .+= g_p(ui, p, ti, idx) - r_p(ui,p,ti,uprev,tprev)'*λ
-            tmp .= r_uprev(ui,p,ti,uprev,tprev)'*λ
+        if !isnothing(idx)
+            dg(dgval, ui, p, ti, idx)
+            rhs .-= dgval
         end
+        rhs .*= -1
+        # compute adjoint vector
+        if OrdinaryDiffEq.isimplicit(alg)
+            jac(J, resid, ti, dt, uprev, ui, p)
+            λ .= J' \ rhs
+        else
+            λ .= rhs
+        end
+        # vector jacobian products
+        vjp(uvjpval, pvjpval, λ, ti, dt, uprev, ui, p)
+        # accumulate gradient
+        dp .-= pvjpval
+        # initialize right hand side for the next iteration
+        rhs .= uvjpval
     end
-    idx = findfirst(tidx -> tidx == tspan[1], t)
+    # define gradient with respect to the inputs
+    idx = findfirst(tidx -> tidx == t0, t)
     if !isnothing(idx)
-        du0 = g_u(u0, p, tspan[1], idx) - tmp
+        dg(dgval, u0, p, t0, idx)
+        du0 .= dgval .- rhs
     end
 
     return dp, du0
 end
-
-# dp_fd = [8.30441  -159.484  75.2022  -339.193]
-
-# Ideas for improving the discrete adjoint implemented here:
-# - Use a better residual function
-# - Use vector-jacobian products rather than jacobians when possible
-# - Specialize on the integration method (requires implementation for each integrator)
-# - Remove allocations
