@@ -17,4 +17,5 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
 MuladdMacro = "0.2"
+ReverseDiff = "1"
 julia = "1"
