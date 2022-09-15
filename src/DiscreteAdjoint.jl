@@ -7,6 +7,8 @@ import ForwardDiff, ReverseDiff, Zygote
 using OrdinaryDiffEq: @.., True, False
 using OrdinaryDiffEq: Tsit5Cache, Tsit5ConstantCache, BS3ConstantCache, BS3Cache, OwrenZen3ConstantCache, OwrenZen3Cache, DImplicitEulerConstantCache, DImplicitEulerCache
 
+using SciMLBase: unwrapped_f
+
 include("derivatives.jl")
 include("adjoint.jl")
 

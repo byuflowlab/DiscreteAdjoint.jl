@@ -29,6 +29,9 @@ function state_jacobian(integrator)
     @unpack f, p, u0, tspan = prob
     t0, tf = tspan
 
+    # Remove any function wrappers: it breaks autodiff
+    unwrappedf = unwrapped_f(f)
+
     chunk_size = ForwardDiff.pickchunksize(length(u0))
 
     cache = integrator.cache
@@ -41,7 +44,7 @@ function state_jacobian(integrator)
     fr = let dualtmpkeys=dualtmpkeys, dualtmpvals=dualtmpvals, integrator=integrator, cache=cache
         (resid, t, dt, uprev, u, p) -> begin
             tmpvar = (; zip(dualtmpkeys, PreallocationTools.get_tmp.(dualtmpvals, Ref(u)))...)
-            step_residual!(resid, t, dt, uprev, u, f, p, tmpvar, integrator, cache)
+            step_residual!(resid, t, dt, uprev, u, unwrappedf, p, tmpvar, integrator, cache)
             return resid
         end
     end
@@ -81,6 +84,9 @@ function previous_state_jacobian_product(integrator, ::ForwardDiffVJP{N}) where 
     @unpack f, p, u0, tspan = prob
     t0, tf = tspan
 
+    # Remove any function wrappers: it breaks autodiff
+    unwrappedf = unwrapped_f(f)
+
     chunk_size = isnothing(N) ? ForwardDiff.pickchunksize(length(u0)) : N
 
     cache = integrator.cache
@@ -95,7 +101,7 @@ function previous_state_jacobian_product(integrator, ::ForwardDiffVJP{N}) where 
         (λ, t, dt, uprev, u, p) -> begin
             resid = PreallocationTools.get_tmp(dualresid, uprev)
             tmpvar = (; zip(keys(dualtmpvar), PreallocationTools.get_tmp.(values(dualtmpvar), Ref(uprev)))...)
-            step_residual!(resid, t, dt, uprev, u, f, p, tmpvar, integrator, cache)
+            step_residual!(resid, t, dt, uprev, u, unwrappedf, p, tmpvar, integrator, cache)
             return λ'*resid
         end
     end
@@ -135,6 +141,9 @@ function parameter_jacobian_product(integrator, ::ForwardDiffVJP{N}) where N
     @unpack f, p, u0, tspan = prob
     t0, tf = tspan
 
+    # Remove any function wrappers: it breaks autodiff
+    unwrappedf = unwrapped_f(f)
+
     chunk_size = isnothing(N) ? ForwardDiff.pickchunksize(length(p)) : N
 
     cache = integrator.cache
@@ -149,7 +158,7 @@ function parameter_jacobian_product(integrator, ::ForwardDiffVJP{N}) where N
         (λ, t, dt, uprev, u, p) -> begin
             resid = PreallocationTools.get_tmp(dualresid, p)
             tmpvar = (; zip(dualtmpkeys, PreallocationTools.get_tmp.(dualtmpvals, Ref(p)))...)
-            step_residual!(resid, t, dt, uprev, u, f, p, tmpvar, integrator, cache)
+            step_residual!(resid, t, dt, uprev, u, unwrappedf, p, tmpvar, integrator, cache)
             return λ'*resid
         end
     end
@@ -196,6 +205,9 @@ function vector_jacobian_product_function(integrator, ::ReverseDiffVJP{compile})
     @unpack f, p, u0, tspan = prob
     t0, tf = tspan
 
+    # Remove any function wrappers: it breaks autodiff
+    unwrappedf = unwrapped_f(f)
+
     cache = integrator.cache
 
     tmpvar = temporary_variables(integrator.cache)
@@ -206,7 +218,7 @@ function vector_jacobian_product_function(integrator, ::ReverseDiffVJP{compile})
         (λ, t, dt, uprev, u, p) -> begin
             resid = similar(λ)
             tmpvar = (; zip(tmpkeys, similar.(tmpvals, eltype(λ)))...)
-            step_residual!(resid, first(t), first(dt), uprev, u, f, p, tmpvar, integrator, cache)
+            step_residual!(resid, first(t), first(dt), uprev, u, unwrappedf, p, tmpvar, integrator, cache)
             λ'*resid
         end
     end
@@ -240,6 +252,9 @@ function vector_jacobian_product_function(integrator, ::ZygoteVJP)
     @unpack prob, alg = integrator.sol
     @unpack f, p, u0, tspan = prob
 
+    # Remove any function wrappers: it breaks autodiff
+    unwrappedf = unwrapped_f(f)
+
     cache = integrator.cache
 
     tmpvar = temporary_variables(integrator.cache)
@@ -250,7 +265,7 @@ function vector_jacobian_product_function(integrator, ::ZygoteVJP)
         (λ, t, dt, uprev, u, p) -> begin
             resid = Zygote.Buffer(λ)
             tmpvar = (; zip(tmpkeys, Zygote.Buffer.(tmpvals, eltype(λ)))...)
-            step_residual!(resid, t, dt, uprev, u, f, p, tmpvar, integrator, cache)
+            step_residual!(resid, t, dt, uprev, u, unwrappedf, p, tmpvar, integrator, cache)
             λ'*copy(resid)
         end
     end
