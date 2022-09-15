@@ -1,12 +1,12 @@
 function discrete_adjoint(sol, dg, t; autojacvec=ForwardDiffVJP(), kwargs...)
 
-    @assert sol.dense "Currently `discrete_adjoint` only works with dense solutions"
+    #@assert sol.dense "Currently `discrete_adjoint` only works with dense solutions"
     @assert all(tidx -> tidx in sol.t, t) "A `tstop` must be set for every data point"
 
     @unpack prob, alg = sol
     @unpack f, p, u0, tspan = prob
     t0, tf = tspan
-   
+
     integrator = OrdinaryDiffEq.init(prob, alg; kwargs...)
 
     # state jacobian function
