@@ -131,3 +131,31 @@ end
         resid[i] = u[i]-tmp[i]
     end
 end
+
+@muladd function step_residual!(resid, t, dt, uprev, u, f, p, tmpvar, integrator, cache::DP5ConstantCache)
+    @unpack a21,a31,a32,a41,a42,a43,a51,a52,a53,a54,a61,a62,a63,a64,a65,a71,a73,a74,a75,a76,btilde1,btilde3,btilde4,btilde5,btilde6,btilde7,c1,c2,c3,c4,c5,c6 = cache
+    k1 = f(uprev, p, t)
+    k2 = f(uprev+dt*a21*k1, p, t+c1*dt)
+    k3 = f(uprev+dt*(a31*k1+a32*k2), p, t+c2*dt)
+    k4 = f(uprev+dt*(a41*k1+a42*k2+a43*k3), p, t+c3*dt)
+    k5 = f(uprev+dt*(a51*k1+a52*k2+a53*k3+a54*k4), p, t+c4*dt)
+    k6 = f(uprev+dt*(a61*k1+a62*k2+a63*k3+a64*k4+a65*k5), p, t+dt)
+    @. resid = u - uprev+dt*(a71*k1+a73*k3+a74*k4+a75*k5+a76*k6)
+end
+
+@muladd function step_residual!(resid, t, dt, uprev, u, f, p, tmpvar, integrator, cache::DP5Cache)
+    @unpack a21,a31,a32,a41,a42,a43,a51,a52,a53,a54,a61,a62,a63,a64,a65,a71,a73,a74,a75,a76,btilde1,btilde3,btilde4,btilde5,btilde6,btilde7,c1,c2,c3,c4,c5,c6 = cache.tab
+    @unpack k1,k2,k3,k4,k5,k6,tmp = tmpvar
+    f(k1, uprev, p, t)
+    @.. broadcast=false tmp = uprev+dt*a21*k1
+    f(k2, tmp, p, t+c1*dt)
+    @.. broadcast=false tmp = uprev+dt*(a31*k1+a32*k2)
+    f(k3, tmp, p, t+c2*dt)
+    @.. broadcast=false tmp = uprev+dt*(a41*k1+a42*k2+a43*k3)
+    f(k4, tmp, p, t+c3*dt)
+    @.. broadcast=false tmp = uprev+dt*(a51*k1+a52*k2+a53*k3+a54*k4)
+    f(k5, tmp, p, t+c4*dt)
+    @.. broadcast=false tmp = uprev+dt*(a61*k1+a62*k2+a63*k3+a64*k4+a65*k5)
+    f(k6, tmp, p, t+dt)
+    @.. broadcast=false resid = u - (uprev+dt*(a71*k1+a73*k3+a74*k4+a75*k5+a76*k6))
+  end
