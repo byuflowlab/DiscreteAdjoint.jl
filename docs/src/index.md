@@ -23,13 +23,13 @@ Feel free to open a pull request if you wish to add an additional integrator or 
 Currently the following integrators (from [OrdinaryDiffEq](https://github.com/SciML/OrdinaryDiffEq.jl)) are supported:
 
 For Non-Stiff Ordinary Differential Equations:
- - BS3
- - OwrenZen3
- - DP5
- - Tsit5
+ - `BS3`
+ - `OwrenZen3`
+ - `DP5`
+ - `Tsit5`
 
 For Fully-Implicit Differential Algebraic Equations
- - DImplicitEuler
+ - `DImplicitEuler`
 
 Note that DAE initialization algorithms are not yet supported, though this only impacts 
 the gradient of the objective with respect to the initial conditions.
