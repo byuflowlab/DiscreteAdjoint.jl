@@ -335,12 +335,22 @@ function vector_jacobian_product_function(integrator, ::ZygoteVJP)
     tmpkeys = keys(tmpvar)
     tmpvals = values(tmpvar)
 
-    fvjp = let tmpkeys=tmpkeys, tmpvals=tmpvals, integrator=integrator, cache=cache
-        (λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
-            resid = Zygote.Buffer(λ)
-            tmpvar = (; zip(tmpkeys, Zygote.Buffer.(tmpvals, eltype(λ)))...)
-            step_residual!(resid, t, tprev, tprev2, u, uprev, uprev2, unwrappedf, p, tmpvar, integrator, cache)
-            λ'*copy(resid)
+    if isempty(tmpvar)
+        fvjp = let tmpvar=tmpvar, integrator=integrator, cache=cache
+            (λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
+                resid = Zygote.Buffer(λ)
+                step_residual!(resid, t, tprev, tprev2, u, uprev, uprev2, unwrappedf, p, tmpvar, integrator, cache)
+                λ'*copy(resid)
+            end
+        end
+    else
+        fvjp = let tmpkeys=tmpkeys, tmpvals=tmpvals, integrator=integrator, cache=cache
+            (λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
+                resid = Zygote.Buffer(λ)
+                tmpvar = (; zip(tmpkeys, Zygote.Buffer.(tmpvals, eltype(λ)))...)
+                step_residual!(resid, t, tprev, tprev2, u, uprev, uprev2, unwrappedf, p, tmpvar, integrator, cache)
+                λ'*copy(resid)
+            end
         end
     end
 

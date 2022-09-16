@@ -1,31 +1,41 @@
-function inplace_dae_tests(; integrator=DImplicitEuler(), fd=true, rd=true, rdc=true, z=true)
+function robertson_dae_tests(; integrator=DImplicitEuler(), inplace=true, 
+    fd=true, rd=true, rdc=true, z=true)
 
     # robertson equation
-    function f!(out,du,u,p,t)
-        out[1] = - p[1]*u[1]               + p[2]*u[2]*u[3] - du[1]
-        out[2] = + p[1]*u[1] - p[3]*u[2]^2 - p[2]*u[2]*u[3] - du[2]
-        out[3] = u[1] + u[2] + u[3] - p[4]
+    if inplace
+        f = (out,du,u,p,t) -> begin
+            out[1] = - p[1]*u[1]               + p[2]*u[2]*u[3] - du[1]
+            out[2] = + p[1]*u[1] - p[3]*u[2]^2 - p[2]*u[2]*u[3] - du[2]
+            out[3] = u[1] + u[2] + u[3] - p[4]
+        end
+    else
+        f = (du,u,p,t) -> begin 
+            out1 = - p[1]*u[1]               + p[2]*u[2]*u[3] - du[1]
+            out2 = + p[1]*u[1] - p[3]*u[2]^2 - p[2]*u[2]*u[3] - du[2]
+            out3 = u[1] + u[2] + u[3] - p[4]
+            return [out1, out2, out3]
+        end
     end
-    p = [0.04,1e4,3e7,1.0]; tspan=(1,2); u0 = [1.0,0.0,0.0]; du0 = [-0.04,0.04,0.0];
-    prob = DAEProblem(f!, du0, u0, tspan, p, differential_vars = [true,true,false])
+    p0 = [0.04,1e4,3e7,1.0]; tspan=(1e-6,1e5); u0 = [1.0,0.0,0.0]; du0 = [-0.04,0.04,0.0];
+    prob = DAEProblem(f, du0, u0, tspan, p0, differential_vars = [true,true,false])
 
     # times at which to evaluate the solution
-    t = range(tspan[1], tspan[2], length=2);
+    t = range(tspan[1], tspan[2], length=100)
 
     # solve the DAEProblem
-    sol = solve(prob, integrator, u0=u0, p=p, abstol=1e-10, reltol=1e-10, saveat=t)
+    sol = solve(prob, integrator, u0=u0, p=p0, abstol=1e-6, reltol=1e-6, saveat=t, initializealg=NoInit())
 
     # objective/loss function
     function sum_of_solution(x)
         _prob = remake(prob, u0=x[1:3], p=x[4:end])
-        sum(solve(_prob, integrator, abstol=1e-10, reltol=1e-10, saveat=t))
+        sum(solve(_prob, integrator, abstol=1e-6, reltol=1e-6, saveat=t, initializealg=NoInit()))
     end
 
     # gradient of the objective function w.r.t the state variables from a specific time step
     dg(out,u,p,t,i) = out .= 1
 
     # calculate gradient using forward-mode automatic differentiation
-    dx = ForwardDiff.gradient(sum_of_solution,[u0;p])
+    dx = ForwardDiff.gradient(sum_of_solution,[u0;p0])
 
     # test adjoint solution using ForwardVJP
     if fd

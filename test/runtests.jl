@@ -1,26 +1,34 @@
 using  OrdinaryDiffEq, ForwardDiff, DiscreteAdjoint
 using Test
 
-include("examples/inplace_ode.jl")
+include("examples/lotka_volterra.jl")
+include("examples/robertson.jl")
+
+# ODE Tests
 
 @testset "BS3()" begin 
-    inplace_ode_tests(integrator=BS3(), z=false)
+    lotka_volterra_ode_tests(integrator=BS3(), inplace=false)
+    lotka_volterra_ode_tests(integrator=BS3(), inplace=true, z=false)
 end
 
 @testset "OwrenZen3()" begin 
-    inplace_ode_tests(integrator=OwrenZen3(), z=false)
+    lotka_volterra_ode_tests(integrator=OwrenZen3(), inplace=false)
+    lotka_volterra_ode_tests(integrator=OwrenZen3(), inplace=true, z=false)
 end
 
 @testset "DP5()" begin 
-    inplace_ode_tests(integrator=DP5(), z=false)
+    lotka_volterra_ode_tests(integrator=DP5(), inplace=false)
+    lotka_volterra_ode_tests(integrator=DP5(), inplace=true, z=false)
 end
 
 @testset "Tsit5()" begin 
-    inplace_ode_tests(integrator=Tsit5())
+    lotka_volterra_ode_tests(integrator=Tsit5(), inplace=false)
+    lotka_volterra_ode_tests(integrator=Tsit5(), inplace=true)
 end
 
-include("examples/inplace_dae.jl")
+# DAE Tests
 
 @testset "DImplicitEuler()" begin 
-    inplace_dae_tests(integrator=DImplicitEuler())
+    robertson_dae_tests(integrator=DImplicitEuler(), inplace=false)
+    robertson_dae_tests(integrator=DImplicitEuler(), inplace=true)
 end

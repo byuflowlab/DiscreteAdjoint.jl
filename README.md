@@ -31,6 +31,9 @@ For Non-Stiff Ordinary Differential Equations:
 For Fully-Implicit Differential Algebraic Equations
  - DImplicitEuler
 
+Note that DAE initialization algorithms are not yet supported, though this only impacts 
+the gradient of the objective with respect to the initial conditions.
+
 ## Example Usage
 
 See the [example usage](https://byuflowlab.github.io/DiscreteAdjoint.jl/dev/guide)

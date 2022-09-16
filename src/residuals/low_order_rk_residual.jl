@@ -133,7 +133,7 @@ end
     k4 = f(uprev+dt*(a41*k1+a42*k2+a43*k3), p, t+c3*dt)
     k5 = f(uprev+dt*(a51*k1+a52*k2+a53*k3+a54*k4), p, t+c4*dt)
     k6 = f(uprev+dt*(a61*k1+a62*k2+a63*k3+a64*k4+a65*k5), p, t+dt)
-    resid .= u - uprev+dt*(a71*k1+a73*k3+a74*k4+a75*k5+a76*k6)
+    resid .= u - (uprev+dt*(a71*k1+a73*k3+a74*k4+a75*k5+a76*k6))
 end
 
 @muladd function step_residual!(resid, t, tprev, tprev2, u, uprev, uprev2, f, p, tmpvar, integrator, cache::DP5Cache)
