@@ -20,6 +20,9 @@ using OrdinaryDiffEq:
     # for dae_caches.jl
     DImplicitEulerConstantCache, DImplicitEulerCache
 
+# this file defines methods to help distinguish between different algorithms
+include("alg_utils.jl")
+
 # this file defines methods for obtaining jacobians and vector jacobian products
 include("derivatives.jl")
 

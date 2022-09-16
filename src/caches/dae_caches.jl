@@ -3,5 +3,6 @@ function temporary_variables(cache::DImplicitEulerConstantCache)
 end
 
 function temporary_variables(cache::DImplicitEulerCache)
-    return (;)
+    @unpack u = cache
+    return (; du=u)
 end

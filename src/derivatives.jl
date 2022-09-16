@@ -137,7 +137,7 @@ mutable struct PreviousPreviousStateJacobianProductWrapper{F,T,U,P} <: Function
     tprev::T
     tprev2::T
     u::U
-    uprev2::U
+    uprev::U
     p::P
 end
 
@@ -169,7 +169,7 @@ function previous_previous_state_jacobian_product(integrator, ::ForwardDiffVJP{N
         end
     end
 
-    fruprev2 = PreviousStateJacobianProductWrapper(u0, fvjp, t0, t0, t0, u0, u0, p)
+    fruprev2 = PreviousPreviousStateJacobianProductWrapper(u0, fvjp, t0, t0, t0, u0, u0, p)
 
     cfg = ForwardDiff.GradientConfig(fruprev2, u0, ForwardDiff.Chunk(chunk_size))
 
@@ -230,7 +230,7 @@ function parameter_jacobian_product(integrator, ::ForwardDiffVJP{N}) where N
         end
     end
 
-    frp = ParamJacobianProductWrapper(u0, fvjp, t0, t0, u0, u0)
+    frp = ParamJacobianProductWrapper(u0, fvjp, t0, t0, t0, u0, u0, u0)
 
     cfg = ForwardDiff.GradientConfig(frp, p, ForwardDiff.Chunk(chunk_size))
 
@@ -296,22 +296,23 @@ function vector_jacobian_product_function(integrator, ::ReverseDiffVJP{compile})
 
     gλ = similar(u0)
     gt = similar([t0])
-    gt1 = similar([t0])
-    gt2 = similar([t0])
+    gtprev = similar([t0])
+    gtprev2 = similar([t0])
     gu = similar(u0)
-    guprev1 = similar(u0)
+    guprev = similar(u0)
     guprev2 = similar(u0)
     gp = similar(p)
 
-    tape = ReverseDiff.GradientTape(fvjp, (gλ, gt, gt1, gt2, gu, guprev1, guprev2, gp))
+    tape = ReverseDiff.GradientTape(fvjp, (gλ, gt, gtprev, gtprev2, gu, guprev, guprev2, gp))
 
     if compile
         tape = ReverseDiff.compile(tape)
     end
 
-    vjp = let gλ = gλ, gt=gt, gt1 = gt1, gt2=gt2, gu=gu
-        (guprev, gp, λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
-            ReverseDiff.gradient!((gλ, gt, gt1, gt2, gu, guprev1, guprev2, gp), tape, (λ, [t], [tprev], [tprev2], u, uprev, uprev2, p))
+    vjp = let gλ = gλ, gt=gt, gtprev = gtprev, gtprev2=gtprev2, gu=gu
+        (guprev, guprev2, gp, λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
+            ReverseDiff.gradient!((gλ, gt, gtprev, gtprev2, gu, guprev, guprev2, gp), tape, (λ, [t], [tprev], [tprev2], u, uprev, uprev2, p))
+            return guprev, guprev2, gp
         end
     end
 
@@ -344,10 +345,11 @@ function vector_jacobian_product_function(integrator, ::ZygoteVJP)
     end
 
     vjp = (uvjpval1, uvjpval2, pvjpval, λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
-        gλ, gt, gt1, gt2, gu, guprev1, guprev2, gp = Zygote.gradient(fvjp, λ, t, tprev, tprev2, u, uprev, uprev2, p)
-        copyto!(uvjpval1, guprev1)
-        copyto!(uvjpval2, guprev2)
-        copyto!(pvjpval, gp)
+        gλ, gt, gtprev, gtprev2, gu, guprev, guprev2, gp = Zygote.gradient(fvjp, λ, t, tprev, tprev2, u, uprev, uprev2, p)       
+        isnothing(guprev) ? uvjpval1 .= 0 : copyto!(uvjpval1, guprev)
+        isnothing(guprev2) ? uvjpval2 .= 0 : copyto!(uvjpval2, guprev2)
+        isnothing(gp) ? pvjpval .= 0 : copyto!(pvjpval, gp)
+        return uvjpval1, uvjpval2, pvjpval
     end
 
     return vjp

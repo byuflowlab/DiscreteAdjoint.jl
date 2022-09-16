@@ -43,8 +43,8 @@ function discrete_adjoint(sol, dg, t; autojacvec=ForwardDiffVJP(), kwargs...)
     # previous state variables and times
     for i = length(sol):-1:2
         # current residual vector arguments
-        ti, tprev, tprev2 = sol.t[i], sol.t[i-1], sol.t[min(1, i-2)]
-        ui, uprev, uprev2 = sol.u[i], sol.u[i-1], sol.u[min(1, i-2)]
+        ti, tprev, tprev2 = sol.t[i], sol.t[i-1], sol.t[max(1, i-2)]
+        ui, uprev, uprev2 = sol.u[i], sol.u[i-1], sol.u[max(1, i-2)]
         # add ∂G/∂xᵢ to right hand side (if nonzero)
         idx = findfirst(tidx -> tidx == ti, t)
         if !isnothing(idx)
@@ -52,7 +52,7 @@ function discrete_adjoint(sol, dg, t; autojacvec=ForwardDiffVJP(), kwargs...)
             rhs .+= dgval
         end
         # compute adjoint vector
-        if OrdinaryDiffEq.isimplicit(alg)
+        if isimplicit(alg)
             # solve for ∂rᵢ/∂xᵢ since ∂rᵢ/∂xᵢ != I
             jac(J, resid, ti, tprev, tprev2, ui, uprev, uprev2, p)
             λ .= J' \ rhs
