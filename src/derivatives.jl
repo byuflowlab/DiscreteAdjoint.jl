@@ -10,16 +10,18 @@ end
 mutable struct CurrentStateJacobianWrapper{F,T,U,P} <: Function
     f::F
     t::T
-    dt::T
+    tprev::T
+    tprev2::T
     uprev::U
+    uprev2::U
     p::P
 end
 
-(ff::CurrentStateJacobianWrapper)(resid, u) = ff.f(resid, ff.t, ff.dt, ff.uprev, u, ff.p)
+(ff::CurrentStateJacobianWrapper)(resid, u) = ff.f(resid, ff.t, ff.tprev, ff.tprev2, u, ff.uprev, ff.uprev2, ff.p)
 
 function (ff::CurrentStateJacobianWrapper)(u)
     resid = similar(u)
-    ff.r(resid, ff.t, ff.dt, ff.uprev, u, ff.p)
+    ff.r(resid, ff.t, ff.tprev, ff.tprev2, u, ff.uprev, ff.uprev2, ff.p)
     return resid
 end
 
@@ -42,21 +44,23 @@ function state_jacobian(integrator)
     dualtmpvals = values(dualtmpvar)
 
     fr = let dualtmpkeys=dualtmpkeys, dualtmpvals=dualtmpvals, integrator=integrator, cache=cache
-        (resid, t, dt, uprev, u, p) -> begin
+        (resid, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
             tmpvar = (; zip(dualtmpkeys, PreallocationTools.get_tmp.(dualtmpvals, Ref(u)))...)
-            step_residual!(resid, t, dt, uprev, u, unwrappedf, p, tmpvar, integrator, cache)
+            step_residual!(resid, t, tprev, tprev2, u, uprev, uprev2, unwrappedf, p, tmpvar, integrator, cache)
             return resid
         end
     end
 
-    fru = CurrentStateJacobianWrapper(fr, t0, t0, u0, p)
+    fru = CurrentStateJacobianWrapper(fr, t0, t0, t0, u0, u0, p)
 
     cfg = ForwardDiff.JacobianConfig(fru, u0, u0)
 
-    jac = (J, resid, t, dt, uprev, u, p) -> begin
+    jac = (J, resid, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
         fru.t = t
-        fru.dt = dt
+        fru.tprev = tprev
+        fru.tprev2 = tprev2
         fru.uprev = uprev
+        fru.uprev2 = uprev2
         fru.p = p
         ForwardDiff.jacobian!(J, fru, resid, u, cfg)
         return J
@@ -71,12 +75,14 @@ mutable struct PreviousStateJacobianProductWrapper{F,T,U,P} <: Function
     λ::U
     f::F
     t::T
-    dt::T
+    tprev::T
+    tprev2::T
     u::U
+    uprev2::U
     p::P
 end
 
-(ff::PreviousStateJacobianProductWrapper)(uprev) = ff.f(ff.λ, ff.t, ff.dt, uprev, ff.u, ff.p)
+(ff::PreviousStateJacobianProductWrapper)(uprev) = ff.f(ff.λ, ff.t, ff.tprev, ff.tprev2, ff.u, uprev, ff.uprev2, ff.p)
 
 function previous_state_jacobian_product(integrator, ::ForwardDiffVJP{N}) where N
 
@@ -94,46 +100,107 @@ function previous_state_jacobian_product(integrator, ::ForwardDiffVJP{N}) where 
 
     dualresid = PreallocationTools.dualcache(u0, chunk_size)
     dualtmpvar = (; zip(keys(tmpvar), PreallocationTools.dualcache.(values(tmpvar), Ref(chunk_size)))...)
-    dualtmpkeys = keys(dualtmpvar)
-    dualtmpvals = values(dualtmpvar)
 
-    fvjp = let dualresid=dualresid, dualtmpkeys=dualtmpkeys, dualtmpvals=dualtmpvals, integrator=integrator, cache=cache
-        (λ, t, dt, uprev, u, p) -> begin
+    fvjp = let dualresid=dualresid, dualtmpvar=dualtmpvar, integrator=integrator, cache=cache
+        (λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
             resid = PreallocationTools.get_tmp(dualresid, uprev)
             tmpvar = (; zip(keys(dualtmpvar), PreallocationTools.get_tmp.(values(dualtmpvar), Ref(uprev)))...)
-            step_residual!(resid, t, dt, uprev, u, unwrappedf, p, tmpvar, integrator, cache)
+            step_residual!(resid, t, tprev, tprev2, u, uprev, uprev2, unwrappedf, p, tmpvar, integrator, cache)
             return λ'*resid
         end
     end
 
-    fruprev = PreviousStateJacobianProductWrapper(u0, fvjp, t0, t0, u0, p)
+    fruprev1 = PreviousStateJacobianProductWrapper(u0, fvjp, t0, t0, t0, u0, u0, p)
 
-    cfg = ForwardDiff.GradientConfig(fruprev, u0, ForwardDiff.Chunk(chunk_size))
+    cfg = ForwardDiff.GradientConfig(fruprev1, u0, ForwardDiff.Chunk(chunk_size))
 
-    uvjp = let fruprev = fruprev, cfg=cfg
-        (uvjpval, λ, t, dt, uprev, u, p) -> begin
-            fruprev.λ = λ
-            fruprev.t = t
-            fruprev.dt = dt
-            fruprev.u = u
-            fruprev.p = p
-            ForwardDiff.gradient!(uvjpval, fruprev, uprev, cfg)
+    uvjp1 = let fruprev1 = fruprev1, cfg=cfg
+        (uvjpval, λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
+            fruprev1.λ = λ
+            fruprev1.t = t
+            fruprev1.tprev = tprev
+            fruprev1.tprev2 = tprev2
+            fruprev1.u = u
+            fruprev1.uprev2 = uprev2
+            fruprev1.p = p
+            ForwardDiff.gradient!(uvjpval, fruprev1, uprev, cfg)
         end
     end
 
-    return uvjp
+    return uvjp1
+end
+
+mutable struct PreviousPreviousStateJacobianProductWrapper{F,T,U,P} <: Function
+    λ::U
+    f::F
+    t::T
+    tprev::T
+    tprev2::T
+    u::U
+    uprev2::U
+    p::P
+end
+
+(ff::PreviousPreviousStateJacobianProductWrapper)(uprev2) = ff.f(ff.λ, ff.t, ff.tprev, ff.tprev2, ff.u, ff.uprev, uprev2, ff.p)
+
+function previous_previous_state_jacobian_product(integrator, ::ForwardDiffVJP{N}) where N
+
+    @unpack prob, alg = integrator.sol
+    @unpack f, p, u0, tspan = prob
+    t0, tf = tspan
+
+    # Remove any function wrappers: it breaks autodiff
+    unwrappedf = unwrapped_f(f)
+
+    chunk_size = isnothing(N) ? ForwardDiff.pickchunksize(length(u0)) : N
+
+    cache = integrator.cache
+    tmpvar = temporary_variables(integrator.cache)
+
+    dualresid = PreallocationTools.dualcache(u0, chunk_size)
+    dualtmpvar = (; zip(keys(tmpvar), PreallocationTools.dualcache.(values(tmpvar), Ref(chunk_size)))...)
+
+    fvjp = let dualresid=dualresid, dualtmpvar=dualtmpvar, integrator=integrator, cache=cache
+        (λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
+            resid = PreallocationTools.get_tmp(dualresid, uprev2)
+            tmpvar = (; zip(keys(dualtmpvar), PreallocationTools.get_tmp.(values(dualtmpvar), Ref(uprev2)))...)
+            step_residual!(resid, t, tprev, tprev2, u, uprev, uprev2, unwrappedf, p, tmpvar, integrator, cache)
+            return λ'*resid
+        end
+    end
+
+    fruprev2 = PreviousStateJacobianProductWrapper(u0, fvjp, t0, t0, t0, u0, u0, p)
+
+    cfg = ForwardDiff.GradientConfig(fruprev2, u0, ForwardDiff.Chunk(chunk_size))
+
+    uvjp2 = let fruprev2 = fruprev2, cfg=cfg
+        (uvjpval, λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
+            fruprev2.λ = λ
+            fruprev2.t = t
+            fruprev2.tprev = tprev
+            fruprev2.tprev2 = tprev2
+            fruprev2.u = u
+            fruprev2.uprev = uprev
+            fruprev2.p = p
+            ForwardDiff.gradient!(uvjpval, fruprev2, uprev2, cfg)
+        end
+    end
+
+    return uvjp2
 end
 
 mutable struct ParamJacobianProductWrapper{F,T,U} <: Function
     λ::U
     f::F
     t::T
-    dt::T
-    uprev::U
+    tprev::T
+    tprev2::T
     u::U
+    uprev::U
+    uprev2::U
 end
 
-(ff::ParamJacobianProductWrapper)(p) = ff.f(ff.λ, ff.t, ff.dt, ff.uprev, ff.u, p)
+(ff::ParamJacobianProductWrapper)(p) = ff.f(ff.λ, ff.t, ff.tprev, ff.tprev2, ff.u, ff.uprev, ff.uprev2, p)
 
 function parameter_jacobian_product(integrator, ::ForwardDiffVJP{N}) where N
 
@@ -155,10 +222,10 @@ function parameter_jacobian_product(integrator, ::ForwardDiffVJP{N}) where N
     dualtmpvals = values(dualtmpvar)
 
     fvjp = let dualresid=dualresid, dualtmpkeys=dualtmpkeys, dualtmpvals=dualtmpvals, integrator=integrator, cache=cache
-        (λ, t, dt, uprev, u, p) -> begin
+        (λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
             resid = PreallocationTools.get_tmp(dualresid, p)
             tmpvar = (; zip(dualtmpkeys, PreallocationTools.get_tmp.(dualtmpvals, Ref(p)))...)
-            step_residual!(resid, t, dt, uprev, u, unwrappedf, p, tmpvar, integrator, cache)
+            step_residual!(resid, t, tprev, tprev2, u, uprev, uprev2, unwrappedf, p, tmpvar, integrator, cache)
             return λ'*resid
         end
     end
@@ -168,12 +235,14 @@ function parameter_jacobian_product(integrator, ::ForwardDiffVJP{N}) where N
     cfg = ForwardDiff.GradientConfig(frp, p, ForwardDiff.Chunk(chunk_size))
 
     pvjp = let frp = frp, cfg=cfg
-        (pvjpval, λ, t, dt, uprev, u, p) -> begin
+        (pvjpval, λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
             frp.λ = λ
             frp.t = t
-            frp.dt = dt
-            frp.uprev = uprev
+            frp.tprev = tprev
+            frp.tprev2 = tprev2
             frp.u = u
+            frp.uprev = uprev
+            frp.uprev2 = uprev2
             ForwardDiff.gradient!(pvjpval, frp, p, cfg)
         end
     end
@@ -183,14 +252,16 @@ end
 
 function vector_jacobian_product_function(integrator, autodiff::ForwardDiffVJP)
 
-    uvjp = previous_state_jacobian_product(integrator, autodiff)
+    uvjp1 = previous_state_jacobian_product(integrator, autodiff)
+    uvjp2 = previous_previous_state_jacobian_product(integrator, autodiff)
     pvjp = parameter_jacobian_product(integrator, autodiff)
 
-    vjp = let uvjp = uvjp, pvjp = pvjp
-        (uvjpval, pvjpval, λ, t, dt, uprev, u, p) -> begin
-            uvjp(uvjpval, λ, t, dt, uprev, u, p)
-            pvjp(pvjpval, λ, t, dt, uprev, u, p)
-            return uvjpval, pvjpval
+    vjp = let uvjp1 = uvjp1, uvjp2=uvjp2, pvjp = pvjp
+        (uvjpval1, uvjpval2, pvjpval, λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
+            uvjp1(uvjpval1, λ, t, tprev, tprev2, u, uprev, uprev2, p)
+            uvjp2(uvjpval2, λ, t, tprev, tprev2, u, uprev, uprev2, p)
+            pvjp(pvjpval, λ, t, tprev, tprev2, u, uprev, uprev2, p)
+            return uvjpval1, uvjpval2, pvjpval
         end
     end
 
@@ -215,30 +286,32 @@ function vector_jacobian_product_function(integrator, ::ReverseDiffVJP{compile})
     tmpvals = values(tmpvar)
 
     fvjp = let tmpkeys=tmpkeys, tmpvals=tmpvals, integrator=integrator, cache=cache
-        (λ, t, dt, uprev, u, p) -> begin
+        (λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
             resid = similar(λ)
             tmpvar = (; zip(tmpkeys, similar.(tmpvals, eltype(λ)))...)
-            step_residual!(resid, first(t), first(dt), uprev, u, unwrappedf, p, tmpvar, integrator, cache)
+            step_residual!(resid, first(t), first(tprev), first(tprev2), u, uprev, uprev2, unwrappedf, p, tmpvar, integrator, cache)
             λ'*resid
         end
     end
 
     gλ = similar(u0)
     gt = similar([t0])
-    gdt = similar([t0])
-    guprev = similar(u0)
+    gt1 = similar([t0])
+    gt2 = similar([t0])
     gu = similar(u0)
+    guprev1 = similar(u0)
+    guprev2 = similar(u0)
     gp = similar(p)
 
-    tape = ReverseDiff.GradientTape(fvjp, (gλ, gt, gdt, guprev, gu, gp))
+    tape = ReverseDiff.GradientTape(fvjp, (gλ, gt, gt1, gt2, gu, guprev1, guprev2, gp))
 
     if compile
         tape = ReverseDiff.compile(tape)
     end
 
-    vjp = let gλ = gλ, gt=gt, gdt = gdt, gu=gu
-        (guprev, gp, λ, t, dt, uprev, u, p) -> begin
-            ReverseDiff.gradient!((gλ, gt, gdt, guprev, gu, gp), tape, (λ, [t], [dt], uprev, u, p))
+    vjp = let gλ = gλ, gt=gt, gt1 = gt1, gt2=gt2, gu=gu
+        (guprev, gp, λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
+            ReverseDiff.gradient!((gλ, gt, gt1, gt2, gu, guprev1, guprev2, gp), tape, (λ, [t], [tprev], [tprev2], u, uprev, uprev2, p))
         end
     end
 
@@ -262,17 +335,18 @@ function vector_jacobian_product_function(integrator, ::ZygoteVJP)
     tmpvals = values(tmpvar)
 
     fvjp = let tmpkeys=tmpkeys, tmpvals=tmpvals, integrator=integrator, cache=cache
-        (λ, t, dt, uprev, u, p) -> begin
+        (λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
             resid = Zygote.Buffer(λ)
             tmpvar = (; zip(tmpkeys, Zygote.Buffer.(tmpvals, eltype(λ)))...)
-            step_residual!(resid, t, dt, uprev, u, unwrappedf, p, tmpvar, integrator, cache)
+            step_residual!(resid, t, tprev, tprev2, u, uprev, uprev2, unwrappedf, p, tmpvar, integrator, cache)
             λ'*copy(resid)
         end
     end
 
-    vjp = (uvjpval, pvjpval, λ, t, dt, uprev, u, p) -> begin
-        gλ, gt, gdt, guprev, gu, gp = Zygote.gradient(fvjp, λ, t, dt, uprev, u, p)
-        copyto!(uvjpval, guprev)
+    vjp = (uvjpval1, uvjpval2, pvjpval, λ, t, tprev, tprev2, u, uprev, uprev2, p) -> begin
+        gλ, gt, gt1, gt2, gu, guprev1, guprev2, gp = Zygote.gradient(fvjp, λ, t, tprev, tprev2, u, uprev, uprev2, p)
+        copyto!(uvjpval1, guprev1)
+        copyto!(uvjpval2, guprev2)
         copyto!(pvjpval, gp)
     end
 
