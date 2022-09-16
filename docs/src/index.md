@@ -14,7 +14,7 @@ Author: Taylor McDonnell
 
 This package is still a work in progress, and therefore only supports a small subset of the integrators provided by [OrdinaryDiffEq](https://github.com/SciML/OrdinaryDiffEq.jl).  However, most integrators provided by the [OrdinaryDiffEq](https://github.com/SciML/OrdinaryDiffEq.jl) package can be supported by this package with a little bit of work.
 
-Additionally, this package currently lacks support for some of the features included by the [SciMLSensitivity](https://sensitivity.sciml.ai/stable/) package including checkpointing, callback tracking, and automatic differentiation integration (through Zygote), though these features may be added in future releases of this package.
+Additionally, this package currently lacks support for some of the features included by the [SciMLSensitivity](https://sensitivity.sciml.ai/stable/) package including callback tracking, checkpointing, and automatic differentiation integration (through Zygote), though these features may be added in future releases of this package.
 
 Feel free to open a pull request if you wish to add an additional integrator or otherwise contribute to this package's development.
 
