@@ -1,4 +1,4 @@
-function lotka_volterra_ode_tests(; integrator=Tsit5(), inplace=true, fd=true, rd=true, rdc=true, z=true)
+function lotka_volterra_ode_tests(; alg=Tsit5(), inplace=true, fd=true, rd=true, rdc=true, z=true)
 
     # lotka volterra equation
     if inplace
@@ -20,12 +20,12 @@ function lotka_volterra_ode_tests(; integrator=Tsit5(), inplace=true, fd=true, r
     t = tspan[1]:0.1:tspan[2];
 
     # solve the ODEProblem
-    sol = solve(prob, integrator, u0=u0, p=p, abstol=1e-10, reltol=1e-10, tstops=t)
+    sol = solve(prob, alg, u0=u0, p=p, abstol=1e-10, reltol=1e-10, tstops=t)
 
     # objective/loss function
     function sum_of_solution(x)
         _prob = remake(prob, u0=x[1:2], p=x[3:end])
-        sum(solve(_prob, integrator, abstol=1e-10, reltol=1e-10, saveat=t))
+        sum(solve(_prob, alg, abstol=1e-10, reltol=1e-10, saveat=t))
     end
 
     # gradient of the objective function w.r.t the state variables from a specific time step

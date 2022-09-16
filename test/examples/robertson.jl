@@ -1,4 +1,4 @@
-function robertson_dae_tests(; integrator=DImplicitEuler(), inplace=true, 
+function robertson_dae_tests(; alg=DImplicitEuler(), inplace=true, 
     fd=true, rd=true, rdc=true, z=true)
 
     # robertson equation
@@ -23,12 +23,12 @@ function robertson_dae_tests(; integrator=DImplicitEuler(), inplace=true,
     t = range(tspan[1], tspan[2], length=100)
 
     # solve the DAEProblem
-    sol = solve(prob, integrator, u0=u0, p=p0, abstol=1e-6, reltol=1e-6, saveat=t, initializealg=NoInit())
+    sol = solve(prob, alg, u0=u0, p=p0, abstol=1e-6, reltol=1e-6, saveat=t, initializealg=NoInit())
 
     # objective/loss function
     function sum_of_solution(x)
         _prob = remake(prob, u0=x[1:3], p=x[4:end])
-        sum(solve(_prob, integrator, abstol=1e-6, reltol=1e-6, saveat=t, initializealg=NoInit()))
+        sum(solve(_prob, alg, abstol=1e-6, reltol=1e-6, saveat=t, initializealg=NoInit()))
     end
 
     # gradient of the objective function w.r.t the state variables from a specific time step
