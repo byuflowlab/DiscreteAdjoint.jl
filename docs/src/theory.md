@@ -1,5 +1,5 @@
 
-# Discrete Adjoint Derivation
+# [Discrete Adjoint Derivation](@id theory)
 
 We can view the time integration of any ordinary differential equation as a collection of residual expressions representing an initialization step and a sequence of discrete integration steps from $t_0$ to $t_{n}$.
 
@@ -81,7 +81,7 @@ $$
 $$
 This matrix problem may be solved iteratively starting from the final time step using the following expression.
 $$
-\frac{\partial r_i}{\partial x_i}^* \lambda_i = \frac{\partial G}{\partial x_i}^* - \sum_{k=i}^n \left( \lambda_k^* \frac{\partial r_k}{\partial x_i} \right)^*
+\frac{\partial r_i}{\partial x_i}^* \lambda_i = \frac{\partial G}{\partial x_i}^* - \sum_{k=i+1}^n \left( \lambda_k^* \frac{\partial r_k}{\partial x_i} \right)^*
 $$
 In practice, state variables from only a limited number of  previous time steps are used to compute state variables for the current time step, so only a few terms from the summation are actually needed to compute the adjoint vector.  
 
