@@ -18,6 +18,14 @@ Additionally, this package currently lacks support for some of the features incl
 
 Feel free to open a pull request if you wish to add an additional algorithm or otherwise contribute to this package's development.
 
+## Installation
+
+Enter the package manager by typing `]` and then run the following:
+
+```julia
+pkg> add https://github.com/byuflowlab/DiscreteAdjoint.jl
+```
+
 ## Supported Algorithms
 
 Currently the following algorithms (from [OrdinaryDiffEq](https://github.com/SciML/OrdinaryDiffEq.jl)) are supported:
