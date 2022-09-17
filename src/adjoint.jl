@@ -1,10 +1,25 @@
 """
     discrete_adjoint(sol, dg, t; autojacvec=ForwardDiffVJP(), kwargs...)
 
-Computes the discrete adjoint for the solution object `sol`.  `dg(x, p, t)` is a function
-which yields the partial derivative of the objective with respect to the state variables at 
-one time step.  Note that at this point in time, the provided solution must save every time
-step.
+Computes the discrete adjoint for the solution object `sol`.
+    
+# Arguments:
+ - `sol`: Solution object from `DifferentialEquations`.  Note that the provided solution 
+    must save every time step.
+ - `dg`: A function of the form `dg(dgval, x, p, t, i)` which returns the partial 
+    derivatives of the objective/loss function with respect to the state variables 
+    at the `i`th time step in `t`
+ - `t`: Time steps at which the objective/loss function is evaluated.  When solving the 
+    original differential equation, a `tstop` must be set for each time in `t`
+
+# Keyword Arguments
+ - `autojacvec`: Method by which to compute the vector-transposed jacobian product. 
+    Possible choices are:
+   - `ForwardDiffVJP()`: Forward-mode automatic differentiation using [ForwardDiff](https://github.com/JuliaDiff/ForwardDiff.jl),
+   - `ReverseDiffVJP(compile=true)`: Reverse-mode automatic differentiation using [ReverseDiff](https://github.com/JuliaDiff/ReverseDiff.jl)
+   - `ZygoteVJP`: Reverse-mode automatic differentiation using [Zygote](https://github.com/FluxML/Zygote.jl)
+    In general, reverse-mode automatic differentiation should be faster than forward-mode 
+    automatic differentiation, especially when large numbers of parameters are considered. 
 """
 function discrete_adjoint(sol, dg, t; autojacvec=ForwardDiffVJP(), kwargs...)
 
