@@ -8,7 +8,7 @@
 
 Author: Taylor McDonnell
 
-**DiscreteAdjoint** is a general purpose implemenation of the discrete adjoint method, which has been designed for use with [OrdinaryDiffEq](https://github.com/SciML/OrdinaryDiffEq.jl).  The approach taken by this package is to combine analytic expressions with automatic differentiation in order to construct a fast, but general implementation of the discrete adjoint method.  While [SciMLSensitivity](https://sensitivity.sciml.ai/stable/) also provides methods for sensitivity analysis, we have found that the adjoint method implementation in this package is less computationally expensive than the methods provided by the [SciMLSensitivity](https://sensitivity.sciml.ai/stable/) package, while still maintaining all the [benefits of the discrete adjoint over the continuous adjoint](https://arxiv.org/abs/2005.13420).
+**DiscreteAdjoint** is a general purpose implemenation of the discrete adjoint method, which has been designed for use with [OrdinaryDiffEq](https://github.com/SciML/OrdinaryDiffEq.jl).  The approach taken by this package is to combine analytic expressions with automatic differentiation in order to construct a fast, but general implementation of the discrete adjoint method.  While [SciMLSensitivity](https://sensitivity.sciml.ai/stable/) also provides methods for sensitivity analysis, we have found that the adjoint method implementation in this package is less computationally expensive than the methods provided by the [SciMLSensitivity](https://sensitivity.sciml.ai/stable/) package, while still maintaining all the [benefits of the discrete adjoint over the continuous adjoint](https://arxiv.org/abs/2005.13420). Specific details about the performance of this package relative to the various sensitivity analysis methods provided by the SciMLSensitivity package may be found in the `benchmark` folder.
 
 ## Development Status
 
@@ -17,6 +17,14 @@ This package is still a work in progress, and therefore only supports a small su
 Additionally, this package currently lacks support for some of the features included by the [SciMLSensitivity](https://sensitivity.sciml.ai/stable/) package including callback tracking, checkpointing, and automatic differentiation integration (through Zygote), though these features may be added in future releases of this package.
 
 Feel free to open a pull request if you wish to add an additional algorithm or otherwise contribute to this package's development.
+
+## Installation
+
+Enter the package manager by typing `]` and then run the following:
+
+```julia
+pkg> add https://github.com/byuflowlab/DiscreteAdjoint.jl
+```
 
 ## Supported Algorithms
 
