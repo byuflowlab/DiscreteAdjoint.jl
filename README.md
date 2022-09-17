@@ -16,7 +16,15 @@ This package is still a work in progress, and therefore only supports a small su
 
 Additionally, this package currently lacks support for some of the features included by the [SciMLSensitivity](https://sensitivity.sciml.ai/stable/) package including callback tracking, checkpointing, and automatic differentiation integration (through Zygote), though these features may be added in future releases of this package.
 
-Feel free to open a pull request if you wish to add an additional algorithm or otherwise contribute to this package's development.
+Feel free to open an issue or pull request if you wish to add an additional algorithm or otherwise contribute to this package's development.
+
+## Installation
+
+Enter the package manager by typing `]` and then run the following:
+
+```julia
+pkg> add https://github.com/byuflowlab/DiscreteAdjoint.jl
+```
 
 ## Supported Algorithms
 
