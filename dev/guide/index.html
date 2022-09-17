@@ -1,7 +1,10 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Usage · DiscreteAdjoint.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link rel="canonical" href="https://byuflowlab.github.io/DiscreteAdjoint.jl/guide/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">DiscreteAdjoint.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li class="is-active"><a class="tocitem" href>Usage</a></li><li><a class="tocitem" href="../theory/">Theory</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Usage</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Usage</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/byuflowlab/DiscreteAdjoint.jl/blob/main/docs/src/guide.md#" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="guide"><a class="docs-heading-anchor" href="#guide">Example Usage</a><a id="guide-1"></a><a class="docs-heading-anchor-permalink" href="#guide" title="Permalink"></a></h1><p>The main function which this package exports is the <code>discrete_adjoint</code> function.</p><article class="docstring"><header><a class="docstring-binding" id="DiscreteAdjoint.discrete_adjoint" href="#DiscreteAdjoint.discrete_adjoint"><code>DiscreteAdjoint.discrete_adjoint</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">discrete_adjoint(sol, dg, t; autojacvec=ForwardDiffVJP(), kwargs...)</code></pre><p>Computes the discrete adjoint for the solution object <code>sol</code>.  <code>dg(x, p, t)</code> is a function which yields the partial derivative of the objective with respect to the state variables at  one time step.  Note that at this point in time, the provided solution must save every time step.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/byuflowlab/DiscreteAdjoint.jl/blob/4d1e5e80afe5a8096dee1b4d8b01b41cfbf68eec/src/adjoint.jl#L1-L8">source</a></section></article><p>Here&#39;s an example showing how to obtain the adjoint solution of a non-stiff ordinary  differential equation.</p><pre><code class="language-julia hljs">using OrdinaryDiffEq, DiscreteAdjoint
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Usage · DiscreteAdjoint.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link rel="canonical" href="https://byuflowlab.github.io/DiscreteAdjoint.jl/guide/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">DiscreteAdjoint.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li class="is-active"><a class="tocitem" href>Usage</a><ul class="internal"><li><a class="tocitem" href="#Lotka-Volterra-Model"><span>Lotka-Volterra Model</span></a></li><li><a class="tocitem" href="#Brusselator-Model"><span>Brusselator Model</span></a></li><li><a class="tocitem" href="#Robertson-Model"><span>Robertson Model</span></a></li></ul></li><li><a class="tocitem" href="../theory/">Theory</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Usage</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Usage</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/byuflowlab/DiscreteAdjoint.jl/blob/main/docs/src/guide.md#" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="guide"><a class="docs-heading-anchor" href="#guide">Example Usage</a><a id="guide-1"></a><a class="docs-heading-anchor-permalink" href="#guide" title="Permalink"></a></h1><p>The main function which this package exports is the <a href="#DiscreteAdjoint.discrete_adjoint"><code>discrete_adjoint</code></a> function.</p><article class="docstring"><header><a class="docstring-binding" id="DiscreteAdjoint.discrete_adjoint" href="#DiscreteAdjoint.discrete_adjoint"><code>DiscreteAdjoint.discrete_adjoint</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">discrete_adjoint(sol, dg, t; autojacvec=ForwardDiffVJP(), kwargs...)</code></pre><p>Computes the discrete adjoint for the solution object <code>sol</code>.</p><p><strong>Arguments:</strong></p><ul><li><code>sol</code>: Solution object from <code>DifferentialEquations</code>.  Note that the provided solution   must save every time step.</li><li><code>dg</code>: A function of the form <code>dg(dgval, x, p, t, i)</code> which returns the partial   derivatives of the objective/loss function with respect to the state variables   at the <code>i</code>th time step in <code>t</code></li><li><code>t</code>: Time steps at which the objective/loss function is evaluated.  When solving the   original differential equation, a <code>tstop</code> must be set for each time in <code>t</code></li></ul><p><strong>Keyword Arguments</strong></p><ul><li><code>autojacvec</code>: Method by which to compute the vector-transposed jacobian product.   Possible choices are:<ul><li><code>ForwardDiffVJP()</code>: Forward-mode automatic differentiation using <a href="https://github.com/JuliaDiff/ForwardDiff.jl">ForwardDiff</a>,</li><li><code>ReverseDiffVJP(compile=true)</code>: Reverse-mode automatic differentiation using <a href="https://github.com/JuliaDiff/ReverseDiff.jl">ReverseDiff</a></li><li><code>ZygoteVJP</code>: Reverse-mode automatic differentiation using <a href="https://github.com/FluxML/Zygote.jl">Zygote</a></li></ul>In general, reverse-mode automatic differentiation should be faster than forward-mode   automatic differentiation, especially when large numbers of parameters are considered. </li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/byuflowlab/DiscreteAdjoint.jl/blob/e684d00eebeb4be176bf1eec0369fd0ef7e56407/src/adjoint.jl#L1-L23">source</a></section></article><p>The following are a few examples of how to use this function.</p><h2 id="Lotka-Volterra-Model"><a class="docs-heading-anchor" href="#Lotka-Volterra-Model">Lotka-Volterra Model</a><a id="Lotka-Volterra-Model-1"></a><a class="docs-heading-anchor-permalink" href="#Lotka-Volterra-Model" title="Permalink"></a></h2><p>Our first example problem is the non-stiff Lotka-Volterra model</p><p class="math-container">\[\begin{aligned}
+\frac{dx}{dt} &amp;= p_1 x - p_2 x y \\
+\frac{dy}{dt} &amp;= -p_3 y + x y
+\end{aligned}\]</p><p>with initial condition <span>$u_0 = [1.0, 1.0]$</span> and <span>$p = [1.5, 1.0, 3.0]$</span>.</p><p>We use an <span>$L^2$</span> objective/loss function sampled at 100 evenly space points.</p><pre><code class="language-julia hljs">using OrdinaryDiffEq, DiscreteAdjoint
 
-# lotka volterra equation
+# lotka volterra model
 f = (du, u, p, t) -&gt; begin
     du[1] = p[1]*u[1] - p[2]*u[1]*u[2]
     du[2] = -p[3]*u[2] + p[4]*u[1]*u[2]
@@ -10,7 +13,7 @@ u0 = [1.0, 1.0]; p = [1.5,1.0,3.0,1.0]; tspan = (0.0, 10.0);
 prob = ODEProblem(f, u0, tspan, p)
 
 # times at which to evaluate the solution
-t = tspan[1]:0.1:tspan[2];
+t = range(tspan[1], tspan[2], length=100)
 
 # solve the ODEProblem
 sol = solve(prob, Tsit5(), u0=u0, p=p, abstol=1e-10, reltol=1e-10, tstops=t)
@@ -25,10 +28,91 @@ end
 dg(out,u,p,t,i) = out .= 1
 
 # adjoint solution using ReverseDiffVJP()
-dp_rd, du0_rd = discrete_adjoint(sol, dg, t; autojacvec=ReverseDiffVJP())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">([8.305362654270171, -159.48429271347584, 75.2035082110843, -339.1950927665102], [-39.12754122347251, -8.787780217418653])</code></pre><p>Here&#39;s an example showing how to obtain the adjoint solution of a differential algebraic  equation.</p><pre><code class="language- hljs">
-using OrdinaryDiffEq, DiscreteAdjoint
+dp_rd, du0_rd = discrete_adjoint(sol, dg, t; autojacvec=ReverseDiffVJP())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">([8.20551470625665, -157.891588070315, 74.44675806084774, -335.8105615288959], [-38.733536081127504, -8.692458002638777])</code></pre><p>Note that this problem was adopted from http://dx.doi.org/10.1109/HPEC49654.2021.9622796</p><h2 id="Brusselator-Model"><a class="docs-heading-anchor" href="#Brusselator-Model">Brusselator Model</a><a id="Brusselator-Model-1"></a><a class="docs-heading-anchor-permalink" href="#Brusselator-Model" title="Permalink"></a></h2><p>Our second example problem is the two dimensional (<span>$N \times N$</span>) Brusselator stiff reaction-diffusion PDE:</p><p class="math-container">\[\begin{aligned}
+\frac{\partial u}{\partial t} &amp;= p_2 + u^2 v - (p_1 + 1) u + p_3 ( \frac{\partial^2 u}{\partial x^2}  + \frac{\partial^2 u}{\partial y^2}) + f(x, y, t) \\
+\frac{\partial v}{\partial t} &amp;= p_1 u - u^2 v + p_4 ( \frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2})
+\end{aligned}\]</p><p>where</p><p class="math-container">\[f(x,y,t) = \begin{cases}
+5 &amp; \text{if } (x-0.3)^2 + (y-0.6)^2 \leq 0.1^2 \text{ and } t \geq 1.1 \\
+0 &amp; \text{else} \\
+\end{cases}\]</p><p>with no-flux boundary conditions and <span>$u(0, x, y) = 22(y(1 - y))^{3/2}$</span> with <span>$v(0, x, y) = 27(x(1 - x))^{3/2}$</span>. This PDE is discretized to a set of <span>$N \times N \times 2$</span> ODEs using the finite difference method. The parameters are spatially-dependent, <span>$p_i = p_i(x, y)$</span>, making each discretized <span>$p_i$</span> a <span>$N \times N$</span> set of values at each discretization point, giving a total of <span>$4 N^2$</span> parameters. The initial parameter values are the uniform <span>$p_i(x, y) = [3.4, 1.0, 10.0, 10.0]$</span></p><p>Once again, we use an <span>$L^2$</span> objective/loss function sampled at 100 evenly space points.</p><pre><code class="language-julia hljs">using OrdinaryDiffEq, DiscreteAdjoint
 
-# robertson equation
+# brusselator model
+
+N = 3
+
+xyd_brusselator = range(0,stop=1,length=N)
+
+dx = step(xyd_brusselator)
+
+brusselator_f(x, y, t) = (((x-0.3)^2 + (y-0.6)^2) &lt;= 0.1^2) * (t &gt;= 1.1) * 5.
+
+limit(a, N) = a == N+1 ? 1 : a == 0 ? N : a
+
+function brusselator_2d_loop(du, u, p, t)
+    lu = LinearIndices((1:N, 1:N, 1:2))
+    lp = LinearIndices((1:N, 1:N, 1:4))
+    @inbounds for I in CartesianIndices((N, N))
+        i, j = Tuple(I)
+        x, y = xyd_brusselator[I[1]], xyd_brusselator[I[2]]
+        ip1, im1, jp1, jm1 = limit(i+1, N), limit(i-1, N), limit(j+1, N), limit(j-1, N)
+        du[lu[i,j,1]] = p[lp[i,j,2]] + u[lu[i,j,1]]^2*u[lu[i,j,2]] - (p[lp[i,j,1]] + 1)*u[lu[i,j,1]] +
+            p[lp[i,j,3]]/dx^2*(u[lu[im1,j,1]] + u[lu[ip1,j,1]] + u[lu[i,jp1,1]] + u[lu[i,jm1,1]] - 4u[lu[i,j,1]]) +
+            brusselator_f(x, y, t)
+        du[lu[i,j,2]] = p[lp[i,j,1]]*u[lu[i,j,1]] - u[lu[i,j,1]]^2*u[lu[i,j,2]] +
+            p[lp[i,j,4]]/dx^2*(u[lu[im1,j,2]] + u[lu[ip1,j,2]] + u[lu[i,jp1,2]] + u[lu[i,jm1,2]] - 4u[lu[i,j,2]])
+    end
+end
+
+pt = (3.4, 1., 10., 10.)
+
+function init_brusselator_2d(xyd, pt)
+    N = length(xyd)
+    u0 = zeros(N*N*2)
+    p = zeros(N*N*4)
+    ru0 = reshape(u0, N, N, 2)
+    rp = reshape(p, N, N, 4)
+    for I in CartesianIndices((N, N))
+        x = xyd[I[1]]
+        y = xyd[I[2]]
+        ru0[I,1] = 22*(y*(1-y))^(3/2)
+        ru0[I,2] = 27*(x*(1-x))^(3/2)
+        rp[I,1] = pt[1]
+        rp[I,2] = pt[2]
+        rp[I,3] = pt[3]
+        rp[I,4] = pt[4]
+    end
+    return u0, p
+end
+
+u0, p = init_brusselator_2d(xyd_brusselator, pt)
+
+tspan = (0.,10.0)
+
+prob_ode_brusselator_2d = ODEProblem(brusselator_2d_loop,u0,tspan,p)
+
+# times at which to evaluate the solution
+t = range(tspan[1], tspan[2], length=100)
+
+# solve the ODEProblem
+sol = solve(prob_ode_brusselator_2d, Tsit5(), abstol=1e-6, reltol=1e-6, tstops=t)
+
+# objective/loss function (not used, but shown for clarity)
+function sum_of_solution(x)
+    _prob = remake(prob, u0=x[1:length(u0)], p=x[length(u0)+1:end])
+    sol = solve(prob_ode_brusselator_2d, Tsit5(), abstol=1e-6, reltol=1e-6, saveat=t)
+end
+
+# gradient of the objective function w.r.t the state variables from a specific time step
+dg(out,u,p,t,i) = out .= 1
+
+# adjoint solution using ReverseDiffVJP()
+dp_rd, du0_rd = discrete_adjoint(sol, dg, t; autojacvec=ReverseDiffVJP())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">([128.35565197695038, 128.35823672520354, 128.35565197694794, 128.49385817622127, 128.49913925024094, 128.49385817622215, 128.35565240360816, 128.3582358722601, 128.35565240361063, -277.31213917829064  …  1.3404292556487556, 2.3631360171692863, -4.688687171537422, 2.363136017169285, 2.2522509205298653, -4.578328065784343, 2.2522509205298653, 2.363136016863832, -4.688687169013384, 2.3631360168638347], [15.783442131504788, 15.705287102870734, 15.783442131504795, 15.70237719905844, 15.382977697598223, 15.702377199058436, 15.783442131512645, 15.705287102842673, 15.783442131512645, 21.900072144643065, 21.898719898887784, 21.90007214464306, 21.731864963286085, 21.723500733952967, 21.731864963286085, 21.900072144642, 21.898719898888995, 21.900072144642007])</code></pre><p>Note that this example was adopted from http://dx.doi.org/10.1109/HPEC49654.2021.9622796</p><h2 id="Robertson-Model"><a class="docs-heading-anchor" href="#Robertson-Model">Robertson Model</a><a id="Robertson-Model-1"></a><a class="docs-heading-anchor-permalink" href="#Robertson-Model" title="Permalink"></a></h2><p>Our third example is the Robertson equation in its implicit form:</p><p class="math-container">\[\begin{aligned}
+\frac{dy_1}{dt} &amp;= -p_1 y_1 + p_2 y_2 y_3 \\
+\frac{dy_2}{dt} &amp;= p_1  y_1 - p_2 y_2 y_3 - p_3 y_{2}^2 \\
+0 &amp;=  y_{1} + y_{2} + y_{3} - p_4 \\
+\end{aligned}\]</p><p>with initial condition <code>u_0 = [1.0, 0.0, 0.0]</code> and parameters <code>p = [0.04, 1e4, 3e7, 1.0]</code>.</p><p>Once again, we use an <span>$L^2$</span> objective/loss function sampled at 100 evenly space points.</p><pre><code class="language-julia hljs">using OrdinaryDiffEq, DiscreteAdjoint
+
+# robertson model
 f = (out,du,u,p,t) -&gt; begin
     out[1] = - p[1]*u[1]               + p[2]*u[2]*u[3] - du[1]
     out[2] = + p[1]*u[1] - p[3]*u[2]^2 - p[2]*u[2]*u[3] - du[2]
@@ -41,17 +125,16 @@ prob = DAEProblem(f, du0, u0, tspan, p0, differential_vars = [true,true,false])
 t = range(tspan[1], tspan[2], length=100)
 
 # solve the DAEProblem
-sol = solve(prob, alg, u0=u0, p=p0, abstol=1e-6, reltol=1e-6, saveat=t, initializealg=NoInit())
+sol = solve(prob, DImplicitEuler(), u0=u0, p=p0, abstol=1e-6, reltol=1e-6, saveat=t, initializealg=NoInit())
 
 # objective/loss function (not used, but shown for clarity)
 function sum_of_solution(x)
-    _prob = remake(prob, u0=x[1:3], p=x[4:end])
-    sum(solve(_prob, alg, abstol=1e-6, reltol=1e-6, saveat=t, initializealg=NoInit()))
+    _prob = remake(prob, u0=x[1:4], p=x[5:end])
+    sum(solve(_prob, DImplicitEuler(), abstol=1e-6, reltol=1e-6, saveat=t, initializealg=NoInit()))
 end
 
 # gradient of the objective function w.r.t the state variables from a specific time step
 dg(out,u,p,t,i) = out .= 1
 
 # adjoint solution using ReverseDiffVJP()
-dp_rd, du0_rd = discrete_adjoint(sol, dg, t; autojacvec=ReverseDiffVJP())
-</code></pre><p>The following are the currently supported vector-jacobian product types.</p><div class="admonition is-warning"><header class="admonition-header">Missing docstring.</header><div class="admonition-body"><p>Missing docstring for <code>ForwardDiffVJP</code>. Check Documenter&#39;s build log for details.</p></div></div><div class="admonition is-warning"><header class="admonition-header">Missing docstring.</header><div class="admonition-body"><p>Missing docstring for <code>ReverseDiffVJP</code>. Check Documenter&#39;s build log for details.</p></div></div><div class="admonition is-warning"><header class="admonition-header">Missing docstring.</header><div class="admonition-body"><p>Missing docstring for <code>ZygoteVJP</code>. Check Documenter&#39;s build log for details.</p></div></div></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../theory/">Theory »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Saturday 17 September 2022 14:26">Saturday 17 September 2022</span>. Using Julia version 1.8.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+dp_rd, du0_rd = discrete_adjoint(sol, dg, t; autojacvec=ReverseDiffVJP())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">([5.9618711766151325e-15, -2.3783298629727563e-20, 3.963893396318271e-24, 99.0], [0.9999999999999999, 0.9999999999999999, 1.0])</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../theory/">Theory »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Saturday 17 September 2022 15:41">Saturday 17 September 2022</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
