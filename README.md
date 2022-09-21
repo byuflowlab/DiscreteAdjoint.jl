@@ -30,13 +30,21 @@ pkg> add https://github.com/byuflowlab/DiscreteAdjoint.jl
 
 Currently the following algorithms (from [OrdinaryDiffEq](https://github.com/SciML/OrdinaryDiffEq.jl)) are supported:
 
-For Non-Stiff Ordinary Differential Equations:
+Explicit Runge-Kutta Methods:
  - `BS3`
  - `OwrenZen3`
+ - `OwrenZen4`
+ - `OwrenZen5`
+ - `BS5`
  - `DP5`
  - `Tsit5`
 
-For Fully-Implicit Differential Algebraic Equations
+SDIRK Methods:
+ - `ImplicitEuler`
+ - `ImplicitMidpoint`
+ - `Trapezoid`
+
+Methods for Fully-Implicit ODEs and DAEs:
  - `DImplicitEuler`
 
 Note that DAE initialization algorithms are not yet supported, though this only impacts 

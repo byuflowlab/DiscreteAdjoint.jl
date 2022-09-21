@@ -34,7 +34,7 @@ function discrete_adjoint(sol, dg, t; autojacvec=ForwardDiffVJP(), kwargs...)
     t0, tf = tspan
 
     # initialize integrator for use with the discrete adjoint
-    integrator = OrdinaryDiffEq.init(prob, alg; kwargs...)
+    integrator = OrdinaryDiffEq.init(prob, alg; tstops=sol.t, kwargs...)
 
     # construct function which computes ∂rᵢ/∂xᵢ
     jac = state_jacobian(integrator)
