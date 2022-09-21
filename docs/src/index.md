@@ -47,8 +47,7 @@ SDIRK Methods:
 Methods for Fully-Implicit ODEs and DAEs:
  - `DImplicitEuler`
 
-Note that DAE initialization algorithms are not yet supported, though this only impacts 
-the gradient of the objective with respect to the initial conditions.
+Note that DAE initialization algorithms are not yet supported.
 
 ## Example Usage
 
