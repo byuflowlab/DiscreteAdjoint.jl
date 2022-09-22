@@ -1,4 +1,4 @@
-using  OrdinaryDiffEq, ForwardDiff, DiscreteAdjoint, LinearAlgebra
+using  OrdinaryDiffEq, ForwardDiff, DiscreteAdjoint
 using Test
 
 include("examples/lotka_volterra.jl")
