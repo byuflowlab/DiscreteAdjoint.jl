@@ -1,8 +1,6 @@
 @muladd function step_residual!(resid, t, tprev, tprev2, u, uprev, uprev2, f, p, tmpvar, integrator, cache::ImplicitEulerConstantCache)
     @unpack γ, c = cache.nlsolver
 
-    f = OrdinaryDiffEq.nlsolve_f(integrator)
-
     dt = t - tprev
     tstep = tprev + c * dt
     invγdt = inv(dt * γ)
@@ -25,8 +23,6 @@ end
 @muladd function step_residual!(resid, t, tprev, tprev2, u, uprev, uprev2, f, p, tmpvar, integrator, cache::ImplicitEulerCache)
     @unpack γ, c = cache.nlsolver
     @unpack tmp, z, ustep, k = tmpvar
-    
-    f = OrdinaryDiffEq.nlsolve_f(integrator)
 
     dt = t - tprev
     tstep = tprev + c * dt
@@ -52,8 +48,6 @@ end
 @muladd function step_residual!(resid, t, tprev, tprev2, u, uprev, uprev2, f, p, tmpvar, integrator, cache::ImplicitMidpointConstantCache)
     @unpack γ, c = cache.nlsolver
 
-    f = OrdinaryDiffEq.nlsolve_f(integrator)
-
     dt = t - tprev
     tstep = tprev + c * dt
     invγdt = inv(dt * γ)
@@ -76,8 +70,6 @@ end
 @muladd function step_residual!(resid, t, tprev, tprev2, u, uprev, uprev2, f, p, tmpvar, integrator, cache::ImplicitMidpointCache)
     @unpack γ, c = cache.nlsolver
     @unpack tmp, z, ustep, k = tmpvar
-    
-    f = OrdinaryDiffEq.nlsolve_f(integrator)
 
     dt = t - tprev
     tstep = tprev + c * dt
@@ -102,8 +94,6 @@ end
 
 @muladd function step_residual!(resid, t, tprev, tprev2, u, uprev, uprev2, f, p, tmpvar, integrator, cache::TrapezoidConstantCache)
     @unpack α, γ, c = cache.nlsolver
-    
-    f = OrdinaryDiffEq.nlsolve_f(integrator)
 
     dt = t - tprev
     tstep = tprev + c * dt
@@ -130,8 +120,6 @@ end
 @muladd function step_residual!(resid, t, tprev, tprev2, u, uprev, uprev2, f, p, tmpvar, integrator, cache::TrapezoidCache)
     @unpack α, γ, c = cache.nlsolver
     @unpack tmp, k = tmpvar
-    
-    f = OrdinaryDiffEq.nlsolve_f(integrator)
 
     dt = t - tprev
     tstep = tprev + c * dt
