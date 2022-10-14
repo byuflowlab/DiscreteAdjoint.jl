@@ -51,6 +51,9 @@ include("residuals/low_order_rk_residual.jl")
 include("residuals/sdirk_residual.jl")
 include("residuals/dae_residual.jl")
 
+# this files defines methods for tracking callbacks
+include("callback_tracking.jl")
+
 # this is the main function call exported by this package
 export discrete_adjoint
 
