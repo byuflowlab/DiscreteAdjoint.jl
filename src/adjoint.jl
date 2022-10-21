@@ -164,7 +164,7 @@ function discrete_adjoint(sol, dg, t; cb=nothing, autojacvec=ForwardDiffVJP(), k
             rhs .+= dgval
         end
         # compute adjoint vector
-        if isimplicit(alg) || ti !== tprev
+        if isimplicit(alg) || ti == tprev
             # solve for ∂rᵢ/∂xᵢ since ∂rᵢ/∂xᵢ != I
             if ti == tprev
                 cb_idx = get_affect_idx(ti)
